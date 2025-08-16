@@ -10,7 +10,7 @@ import './styles/modern-theme.css';
 import { Delete24Regular } from "@fluentui/react-icons";
 import * as speechsdk from 'microsoft-cognitiveservices-speech-sdk';
 import SpokenLanguageOptions from './AppSettings.tsx';
-import { ScenarioOptions } from './AppSettings.tsx';
+import { ScenarioOptions, LayoutOptions } from './AppSettings.tsx';
 import { insuranceConversationTemplate } from './ConversationTemplates';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ThemeToggle } from './components/ThemeToggle';
@@ -30,6 +30,7 @@ import { SmartNotificationHeader } from './components/SmartNotificationHeader';
 import { EnhancedRecommendationPanel } from './components/EnhancedRecommendationPanel';
 import { InvestmentIntelligenceDashboard } from './components/InvestmentIntelligenceDashboard';
 import { ClientEngagementWorkflow } from './components/ClientEngagementWorkflow';
+import { MasterLayoutController } from './components/MasterLayoutController';
 
 let recognizer: any;
 // Define an interface for the image object  
@@ -129,6 +130,9 @@ interface AppState {
     showEnhancedFeatures: boolean;
     showIntelligenceDashboard: boolean;
     showClientWorkflow: boolean;
+    // Layout control
+    useDashboardLayout: boolean;
+    selectedLayout: string;
 }export default class App extends Component<{}, AppState> {
   private containerRef: RefObject<HTMLDivElement>;
   
@@ -197,7 +201,10 @@ interface AppState {
         // Enhanced features control
         showEnhancedFeatures: true,
         showIntelligenceDashboard: true,
-        showClientWorkflow: false
+        showClientWorkflow: false,
+        // Layout control
+        useDashboardLayout: true,
+        selectedLayout: 'original'
     };  }
 
   // Notification system methods
@@ -306,6 +313,22 @@ interface AppState {
     this.setState((prevState) => ({
       showClientWorkflow: !prevState.showClientWorkflow,
     }));
+  };
+
+  handleDashboardLayoutToggleChange = () => {
+    this.setState((prevState) => ({
+      useDashboardLayout: !prevState.useDashboardLayout,
+    }));
+  };
+
+  handleLayoutChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+    if (option) {
+      this.setState({
+        selectedLayout: option.key as string,
+        // If selecting a non-original layout, ensure advanced layouts are enabled
+        useDashboardLayout: option.key !== 'original' ? true : this.state.useDashboardLayout
+      });
+    }
   };
 
   scrollLeft = () => { if (this.containerRef.current) {
@@ -865,8 +888,124 @@ interface AppState {
             onIntelligenceDashboardToggle={this.handleIntelligenceDashboardToggleChange}
             showClientWorkflow={this.state.showClientWorkflow}
             onClientWorkflowToggle={this.handleClientWorkflowToggleChange}
+            useDashboardLayout={this.state.useDashboardLayout}
+            onDashboardLayoutToggle={this.handleDashboardLayoutToggleChange}
+            selectedLayout={this.state.selectedLayout}
+            onLayoutChange={this.handleLayoutChange}
           />
 
+          {/* Layout Rendering Logic */}
+          {this.state.useDashboardLayout && this.state.selectedLayout !== 'original' ? (
+            <MasterLayoutController
+              liveGuidanceComponent={
+                this.state.copilotChecked && (
+                  <div>
+                    {this.state.liveGuidanceViewMode === 'unified' && (
+                      <UnifiedLiveGuidancePanel
+                        pendingTasks={this.state.agentGuidance}
+                        completedTasks={this.state.taskCompleted}
+                        isProcessing={this.state.isProcessing}
+                        currentViewMode={this.state.liveGuidanceViewMode}
+                        onViewModeChange={(mode) => this.setState({ liveGuidanceViewMode: mode })}
+                      />
+                    )}
+                    
+                    {this.state.liveGuidanceViewMode === 'progress' && (
+                      <ProgressLiveGuidancePanel
+                        pendingTasks={this.state.agentGuidance}
+                        completedTasks={this.state.taskCompleted}
+                        isProcessing={this.state.isProcessing}
+                        currentViewMode={this.state.liveGuidanceViewMode}
+                        onViewModeChange={(mode) => this.setState({ liveGuidanceViewMode: mode })}
+                      />
+                    )}
+                    
+                    {this.state.liveGuidanceViewMode === 'kanban' && (
+                      <KanbanLiveGuidancePanel
+                        pendingTasks={this.state.agentGuidance}
+                        completedTasks={this.state.taskCompleted}
+                        isProcessing={this.state.isProcessing}
+                        currentViewMode={this.state.liveGuidanceViewMode}
+                        onViewModeChange={(mode) => this.setState({ liveGuidanceViewMode: mode })}
+                      />
+                    )}
+                    
+                    {this.state.liveGuidanceViewMode === 'chat' && (
+                      <ChatLiveGuidancePanel
+                        pendingTasks={this.state.agentGuidance}
+                        completedTasks={this.state.taskCompleted}
+                        isProcessing={this.state.isProcessing}
+                        currentViewMode={this.state.liveGuidanceViewMode}
+                        onViewModeChange={(mode) => this.setState({ liveGuidanceViewMode: mode })}
+                      />
+                    )}
+                  </div>
+                )
+              }
+              sentimentComponent={
+                <CombinedInsightsPanel
+                  entitiesExtracted={this.state.displayNLPOutput}
+                  sentimentData={this.state.sentimentData}
+                />
+              }
+              transcriptComponent={
+                this.state.showTranscriptPanel && (
+                  <ModernPivotSection
+                    title="Conversation Transcripts"
+                    items={[
+                      {
+                        key: 'realtime',
+                        headerText: 'Real-time Transcript',
+                        content: (
+                          <ModernTextArea
+                            id="transcriptTextarea"
+                            defaultValue={this.state.displayText}
+                            onChange={() => this.onTranscriptTextareaChange()}
+                            rows={10}
+                          />
+                        )
+                      },
+                      ...(this.state.showPIIRedactedTranscript ? [{
+                        key: 'pii',
+                        headerText: 'PII-redacted Transcript',
+                        content: (
+                          <ModernTextArea
+                            id="piiTextarea"
+                            defaultValue={this.state.displayPiiText}
+                            rows={10}
+                            readOnly
+                          />
+                        )
+                      }] : [])
+                    ]}
+                  />
+                )
+              }
+              recommendationComponent={
+                this.state.showEnhancedFeatures ? (
+                  <EnhancedRecommendationPanel
+                    recommendation={this.state.recommendation}
+                    isGenerating={this.state.isGeneratingRecommendation}
+                    onGenerateRecommendation={() => this.generateInvestmentRecommendation()}
+                    conversationTranscript={this.state.displayText}
+                    sentimentData={this.state.sentimentData}
+                    keyPhrases={this.state.displayKeyPhrases}
+                  />
+                ) : (
+                  <RecommendationPanel
+                    recommendation={this.state.recommendation}
+                    isGenerating={this.state.isGeneratingRecommendation}
+                    onGenerateRecommendation={() => this.generateInvestmentRecommendation()}
+                  />
+                )
+              }
+              isRecording={this.state.isRecording}
+              currentLayout={this.state.selectedLayout}
+              showLayoutSelector={false}
+            />
+          ) : (
+            <>
+              {/* Original Layout - Shows when advanced layouts are disabled OR original layout is specifically selected */}
           {/* Live Guidance Section - Dynamic View Modes */}
           {this.state.copilotChecked && (
             <div>
@@ -1138,7 +1277,9 @@ interface AppState {
               </ModernSection>
             </div>
           )}
-          
+            </>
+          )}
+
           <StatusBar 
             isRecording={this.state.isRecording}
             connectionStatus={this.state.connectionStatus}

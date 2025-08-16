@@ -12,7 +12,7 @@ import {
 import { useTheme } from '../contexts/ThemeContext';
 import { ModernButton } from './ModernButton';
 import SpokenLanguageOptions from '../AppSettings';
-import { ScenarioOptions } from '../AppSettings';
+import { ScenarioOptions, LayoutOptions } from '../AppSettings';
 
 interface ModernSettingsPanelProps {
   isOpen: boolean;
@@ -38,6 +38,12 @@ interface ModernSettingsPanelProps {
   onIntelligenceDashboardToggle?: () => void;
   showClientWorkflow?: boolean;
   onClientWorkflowToggle?: () => void;
+  // Layout control
+  useDashboardLayout?: boolean;
+  onDashboardLayoutToggle?: () => void;
+  // New layout selection
+  selectedLayout?: string;
+  onLayoutChange?: (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => void;
 }
 
 export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
@@ -63,7 +69,13 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
   showIntelligenceDashboard = true,
   onIntelligenceDashboardToggle,
   showClientWorkflow = false,
-  onClientWorkflowToggle
+  onClientWorkflowToggle,
+  // Layout control
+  useDashboardLayout = true,
+  onDashboardLayoutToggle,
+  // New layout selection
+  selectedLayout = 'original',
+  onLayoutChange
 }) => {
   const { isDark, theme } = useTheme();
 
@@ -362,6 +374,51 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
               inlineLabel
               styles={toggleStyles}
             />
+          </div>
+        </div>
+
+        {/* Layout Settings */}
+        <div className="modern-section fade-in">
+          <div className="modern-section-header">🎨 Layout & Interface</div>
+          
+          <div style={{ marginBottom: 'var(--spacing-md)' }}>
+            <Label styles={labelStyles}>Interface Layout Mode</Label>
+            <Dropdown
+              placeholder="Select Layout Mode"
+              options={LayoutOptions()}
+              selectedKey={selectedLayout}
+              onChange={onLayoutChange}
+              styles={dropdownStyles}
+            />
+            <div style={{ 
+              marginTop: '8px', 
+              fontSize: '11px', 
+              color: 'var(--text-secondary)',
+              lineHeight: '1.4'
+            }}>
+              💡 <strong>Tip:</strong> Choose "Dashboard Grid" or "Command Center" for no-scroll experience, 
+              "Spotlight Focus" for presentations, or "Floating Pods" for maximum customization.
+            </div>
+          </div>
+
+          <div className="toggle-group">
+            <Toggle
+              label="Enable Advanced Layout Features"
+              checked={useDashboardLayout}
+              onChange={onDashboardLayoutToggle}
+              onText="Advanced Layouts"
+              offText="Original Only"
+              inlineLabel
+              styles={toggleStyles}
+            />
+            <div style={{ 
+              marginTop: '8px', 
+              fontSize: '12px', 
+              color: 'var(--text-secondary)',
+              fontStyle: 'italic'
+            }}>
+              � Advanced layouts provide modern UI alternatives to the original vertical scroll design
+            </div>
           </div>
         </div>
 

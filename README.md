@@ -1,22 +1,108 @@
-# Conversation Copilot with Multimodal Azure AI
+# Investment Agent - Conversation Copilot with Multimodal Azure AI
+
+**🚀 Enhanced with Modern UI Layouts and Advanced Investment Intelligence**
+
+Inves3.	**Prepare and run the frontend app (in frontend folder)**
+    +	Go to frontend directory and run `npm install` to install dependencies.
+    +	Update the backend API endpoint in the frontend configuration if needed (typically in src/api/ folder)
+        +	If backend is running on local machine using port 8080 then ensure the API calls point to `http://localhost:8080`
+    +   Start frontend web app by running `npm run dev`. 
+    +	Open a browser and go to `http://localhost:5173` (or the port shown in terminal) to access the app. 
+    +   **🎨 Choose Your Layout**: Click the ⚙️ Settings button to access Application Settings and select from 9 different layout modes
+    +   **🎤 Start Investment Session**: Click "Start Conversation" and begin discussing investment topics. The AI will provide real-time guidance and recommendations
+    +   **📊 Explore Features**: Try different view modes (Unified, Chat, Kanban, Progress) and generate investment recommendations
+    +   Remember to click "End Conversation" to stop live transcription and save insights.
+
+## 🚀 Getting Started with Layout Modes
+
+1. **First Time Users**: Start with "📐 Dashboard Grid" for the best no-scroll experience
+2. **Presentations**: Use "🔍 Spotlight Focus" for clean, focused displays  
+3. **Trading Environments**: Try "🎯 Command Center" for high-density information
+4. **Mobile/Tablet**: Select "📱 Tablet View" for touch-optimized interface
+5. **Power Users**: Experiment with "🌊 Floating Pods" for maximum customizationAgent is a sophisticated web-based application that enables you to simulate Agent-Customer interactions specifically designed for investment and financial advisory scenarios. It showcases the power of AI to act as an effective copilot, using Azure AI's powerful multimodal understanding of long-form text, images, and advanced reasoning capabilities to provide intelligent investment recommendations and real-time guidance.
+
+<img src="common/images/solution-overview.png" align="center" />
+
+## 🎯 **New Features & Modern UI Layouts**
+
+This solution now includes **9 different layout modes** designed for various use cases, from traditional interfaces to cutting-edge dashboard views:
+
+### **📊 Live Guidance View Modes**
+Choose from multiple intelligent guidance interfaces:
+
+#### **Unified View - Comprehensive Overview**
+<img src="common/images/HomePage_UnifiedView.png" align="center" />
+*Integrated view showing all guidance components in a single, organized interface*
+
+#### **Chat Interface - Conversational Guidance** 
+<img src="common/images/HomePage_Chat.png" align="center" />
+*Chat-style interface for natural, conversational AI guidance and recommendations*
+
+#### **Kanban Workflow - Task Management**
+<img src="common/images/HomePage_Kanban.png" align="center" />
+*Visual task board for tracking conversation progress and action items*
+
+#### **Progress Tracking - Milestone View**
+<img src="common/images/HomePage_Progress.png" align="center" />
+*Progress-based interface showing conversation milestones and completion status*
+
+### **💡 Investment Intelligence & Analytics**
+
+#### **Advanced Recommendation Engine**
+<img src="common/images/Recommendation_Analytics.png" align="center" />
+*Sophisticated investment recommendation system with sentiment analysis and market insights*
+
+#### **Real-time Sentiment & Transcript Analysis**
+<img src="common/images/Transcript_Sentiment.png" align="center" />
+*Live sentiment analysis combined with intelligent transcript processing for investment decision-making*
+
+#### **Client Engagement Workflow**
+<img src="common/images/Engagement_Workflow.png" align="center" />
+*Complete client engagement pipeline from initial contact to investment recommendation*
+
+### **🎨 Modern Layout Options**
+
+The application now supports **9 different layout modes** accessible through Application Settings:
+
+1. **📜 Original Layout** - Traditional vertical scrolling interface
+2. **📐 Dashboard Grid** - Professional 2x2 grid with no scrolling (Recommended)
+3. **🎯 Command Center** - Trading floor style with compact components  
+4. **🔍 Spotlight Focus** - Focus-based layout with contextual peripherals
+5. **🧠 Contextual Flow** - Smart adaptive layout based on context
+6. **🌊 Floating Pods** - Customizable floating information bubbles
+7. **📱 Tablet View** - Tab-based interface optimized for touch devices
+8. **📋 Sidebar Navigation** - Main content with collapsible sidebar
+9. **🪟 Floating Panels** - Draggable, resizable windows for power usersnversation Copilot with Multimodal Azure AI
 Conversation copilot is a web-based app that enables you to simulate Agent-Customer interactions (in any line of business) and shows the power of AI to act as a very effective copilot. It uses Azure AI’s powerful multimodal understanding of long-form text, images and ability to reason across the diverse data input to power the copilot experience.
 
 <img src="common/images/solution-overview.png" align="center" />
 
 **Solution highlights:**
-* A pattern for customer interaction where it intercepts voice, text and image data in real-time to power a better and more efficient end-user experience.
-* The real-time pattern implemented here can be applied to expedite business insights & make faster business decisions.
-    * Drive earlier actions: for example customer churn & upsell opportunities.
-    * Live guidance to enable agent-assist, coaching and virtual agents use cases.
-* Pattern could be used to drive better digital experiences for customers/employees
-    * Could be used to mobile/web experiences (not just call centers).
+* **Investment-focused AI copilot** with specialized financial advisory capabilities and real-time market intelligence
+* **9 modern layout modes** providing flexible user interfaces from traditional to cutting-edge dashboard views
+* **Advanced sentiment analysis** specifically tuned for investment conversations and risk assessment
+* **Real-time recommendation engine** generating personalized investment strategies based on conversation context
+* **Multimodal intelligence** combining voice, text, and visual data for comprehensive investment analysis
+* A pattern for customer interaction where it intercepts voice, text and image data in real-time to power a better and more efficient investment advisory experience
+* The real-time pattern implemented here can be applied to expedite investment decisions & drive better client outcomes:
+    * Drive earlier actions: for example risk assessment & portfolio optimization opportunities
+    * Live guidance to enable advisor-assist, coaching and intelligent recommendation systems
+    * Real-time sentiment tracking for better client relationship management
+* Pattern could be used to drive better digital experiences for investment clients and advisors
+    * Could be used in mobile/web investment platforms (not just traditional advisory calls)
+    * Supports multiple interface modes from traditional to modern dashboard layouts
 
-**Key features of this solution:**
-1. **Live Guidance**: Real-time conversation analysis to provide live guidance.
-2. **GPT-Vision for image analysis**: Extract key information & insights from images.
-3. **Conversation Summarization & custom insight**: Extract custom business insights & conversation summarization.
-4. **Conversation Transcript**: Transcription of live audio stream (using laptop mic or headphone).
-5. **Entity Extraction & PII Detection** including real-time PII redaction.
+**Key features of this enhanced solution:**
+1. **🤖 Live Investment Guidance**: Real-time conversation analysis with investment-specific recommendations and market insights
+2. **📊 Advanced Analytics Dashboard**: Multiple view modes (Unified, Chat, Kanban, Progress) for different advisory scenarios  
+3. **💡 Intelligent Recommendation Engine**: AI-powered investment suggestions based on conversation context and sentiment analysis
+4. **🎨 Modern UI Layouts**: 9 different interface modes including Dashboard Grid, Command Center, Spotlight Focus, and Floating Pods
+5. **📈 Sentiment-Driven Insights**: Real-time emotional analysis to gauge client comfort levels and investment readiness
+6. **🖼️ GPT-Vision for Document Analysis**: Extract key information & insights from financial documents and charts
+7. **📝 Investment-Focused Summarization**: Extract custom business insights & investment-specific conversation summarization
+8. **🎤 Real-time Conversation Transcript**: Transcription of live audio stream optimized for financial terminology
+9. **🔒 Entity Extraction & PII Detection**: Advanced privacy protection with real-time PII redaction for financial data
+10. **⚙️ Flexible Configuration**: Easily switch between layout modes and customize AI features through Application Settings
 
 ## Architecture
 Below architecture diagram shows the key components of this solution. 
@@ -25,7 +111,32 @@ Below architecture diagram shows the key components of this solution.
 The solution has two runtime components: 
 * **API backend** is an Express-based backend API app. It orchestrates calls to multiple Azure AI services (Azure OpenAI, Azure Speech, Azure Language) and provides API endpoint for the frontend webapp to consume.
 
-* **Web frontend** is a React-based web UI. It captures voice, text, image data and interacts with the backend API to get real-time insights from Azure AI services.
+* **Web frontend** is a React-based web UI with modern layout capabilities. It captures voice, text, image data and interacts with the backend API to get real-time insights from Azure AI services. The frontend now includes 9 different layout modes and advanced investment intelligence features.
+
+## 🎨 User Interface & Experience Features
+
+### **Layout Selection & Customization**
+The application provides unprecedented flexibility in how information is presented:
+
+- **Layout Dropdown**: Easily switch between 9 different interface modes through Application Settings
+- **Responsive Design**: All layouts adapt to different screen sizes and devices
+- **Context-Aware Interfaces**: Layouts automatically adjust based on recording state and user interactions
+- **No-Scroll Experience**: Modern layouts eliminate scrolling for better focus and productivity
+- **Customizable Components**: Floating pods, resizable panels, and magnetic zones for personalized workflows
+
+### **Investment Intelligence Features**
+- **Real-time Sentiment Gauge**: Visual indicators showing client emotional state during investment discussions
+- **Conversation Analytics**: Advanced metrics tracking engagement, sentiment trends, and decision readiness
+- **Investment Recommendation Cards**: AI-generated investment suggestions with confidence scores and reasoning
+- **Risk Assessment Integration**: Automatic risk tolerance evaluation based on conversation patterns
+- **Portfolio Context Awareness**: Integration with existing portfolio data for personalized recommendations
+
+### **Enhanced User Experience**
+- **Smart Notifications**: Intelligent alerts for important conversation moments and recommendation opportunities
+- **Theme Support**: Dark/light mode toggle for different viewing preferences  
+- **Accessibility Features**: Full keyboard navigation and screen reader support
+- **Multi-monitor Support**: Floating panels optimized for multi-screen setups
+- **Touch-Friendly**: Tablet and mobile-optimized interfaces for on-the-go advisory sessions
 
 ## Prerequisites
 
@@ -37,13 +148,13 @@ The solution has two runtime components:
 
 ## How to setup this solution
 
-1. Clone this repo. This repo has two apps: 
-    * ai-conversational-copilot-webfrontend folder is for the "ReactJS Frontend" web UI component and
-    * ai-conversational-copilot-apibackend folder is for the "ExpressJS Backend" API backend component 
+1. Clone this repo. This repo has two main components: 
+    * **backend** folder contains the ExpressJS Backend API component 
+    * **frontend** folder contains the ReactJS Frontend web UI component with modern layout capabilities 
 
 
-2. **Prepare and run the backend app (in folder ai-conversational-copilot-apibackend)**
-    -	Go to ai-conversational-copilot-apibackend directory and run `npm install -all` to install dependencies.
+2. **Prepare and run the backend app (in backend folder)**
+    -	Go to backend directory and run `npm install` to install dependencies.
     -   Rename config_template.json to config.json
     -	Update the “config.json” file with your Azure Speech service key (speech_subscription_key property) and Azure region (speech_region property). Azure Region value examples: “eastus2”, “westus”
     -	Update the “config.json” file with your Azure Language service key (text_analytics_key property) and endpoint (text_analytics_endpoint property). 
@@ -67,26 +178,52 @@ The solution has two runtime components:
     +   Click on the "Start Converstation" button on the web page and start talking. You should see transcription displayed on the web page in real-time (an example shown below). You can change spoken language under "Settings". Note that Live Guidance is disabled by default. Output below is with Live Guidance enabled.
     +   Remember to click on "End Conversation" to stop live transcription and insights.
 
-    <img src="common/images/sampleoutput-liveguidance-enabled.png " align="center" />
+## 🎯 Investment Intelligence Features
 
+This Investment Intelligence platform combines conversational AI with advanced analytics to provide real-time investment guidance. You can customize which AI features to use from the application settings.
 
-## Selecting AI Features to use
-This solution is modular and you can select which AI features you want to use. You can enable/disable AI features from the web UI settings. Below are the AI features that you can enable/disable from the web UI settings.
-1. **Live Guidance**: This feature uses Azure OpenAI Chat API (GPT-4) to provide live guidance to the agent. This feature is disabled by default. To enable this feature, go to "Settings" and then enable "Live Guidance". You can update the conversation template as necessary and can also tune the template questions/wordings. An example of live guidance configuratio is shown below.
+### **Core Features**
 
-    <img src="common/images/configure-liveguidance.png " align="center" />
+1. **🎨 Multiple Layout Modes**: Choose from 9 different interface layouts optimized for different scenarios - from presentations to trading environments
+   
+   ![Homepage with Chat View](common/images/HomePage_Chat.png)
+   *Chat-focused layout for detailed investment discussions*
 
-2. **GPT-Vision**: This feature uses Azure OpenAI GPT-4 Vision to extract key information from images. This feature is disabled by default. To enable this feature, go to "Settings" and then enable "GPT-Vision". An example of GPT-Vision output is shown below.
+   ![Homepage with Kanban View](common/images/HomePage_Kanban.png)
+   *Kanban layout for portfolio management and task tracking*
 
-    <img src="common/images/sampleoutput-gptv-cardamage.png " align="center" />
+2. **📊 Unified Dashboard**: Comprehensive view combining conversation analysis, sentiment tracking, and recommendation panels
 
-3. **Conversation Summarization & custom prompts**: This feature uses Azure OpenAI Completion API to summarize the conversation or extract insights using custom prompts. This feature is disabled by default. To enable this feature, go to "Settings" and then enable "Custom Prompts". An example of conversation summarization output is shown below.
+   ![Unified Dashboard View](common/images/HomePage_UnifiedView.png)
+   *Complete investment intelligence dashboard with all features visible*
 
-    <img src="common/images/summary-customprompt.png " align="center" />
+3. **📈 Progress Tracking**: Monitor client engagement and investment decision progress
 
-4. **Conversation Transcript**: This feature uses Azure AI Speech service to perform real-time transcription of the conversation. This feature is enabled by default and can not be disabled. To hide real-time conversation transcript, go to "Settings" and then disable "Live Transcription". This will only hide the transcript from the web UI. The transcript will still be available in the backend API and can be used for other AI features.
+   ![Progress Tracking View](common/images/HomePage_Progress.png)
+   *Track conversation progress and client decision readiness*
 
-5. **Entity Extraction & PII Detection**: This feature uses Azure AI Language Service to extract entities and detect PII information. This feature is enabled by default and can not be disabled. To hide this information, go to "Settings" and then disable "Live Transcription". 
+4. **🎯 Investment Recommendations**: AI-powered investment suggestions with detailed analytics
+
+   ![Recommendation Analytics](common/images/Recommendation_Analytics.png)
+   *Advanced recommendation engine with confidence scores and market analysis*
+
+5. **💬 Sentiment Analysis**: Real-time emotional intelligence tracking during investment conversations
+
+   ![Transcript Sentiment Analysis](common/images/Transcript_Sentiment.png)
+   *Live sentiment analysis and conversation insights*
+
+6. **🔄 Client Engagement Workflow**: Streamlined process management for investment advisory sessions
+
+   ![Engagement Workflow](common/images/Engagement_Workflow.png)
+   *Complete client engagement process from initiation to follow-up*
+
+### **Advanced AI Capabilities**
+
+- **Live Guidance**: Real-time investment advice powered by Azure OpenAI GPT-4
+- **Conversation Summarization**: Automated meeting summaries and action items
+- **Risk Assessment**: AI-driven client risk tolerance evaluation
+- **Portfolio Context**: Integration with existing investment data
+- **Compliance Monitoring**: Automated detection of regulatory considerations 
 
 ## Using Azure OpenAI Service via Private Link from a different region
 Azure OpenAI Service is powered by a diverse set of models with different capabilities and price points. Model availability [varies by region](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models).

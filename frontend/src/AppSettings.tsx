@@ -52,5 +52,21 @@ export const ScenarioOptions = () => {
   return scenarios;
 };
 
+export const LayoutOptions = () => {
+  const layouts = [
+    { key: 'original', text: '📜 Original Layout (Vertical Scroll)' },
+    { key: 'dashboard', text: '📐 Dashboard Grid (Recommended)' },
+    { key: 'command', text: '🎯 Command Center (Trading Floor)' },
+    { key: 'spotlight', text: '🔍 Spotlight Focus (Context-Aware)' },
+    { key: 'contextual', text: '🧠 Contextual Flow (Smart Adaptive)' },
+    { key: 'pods', text: '🌊 Floating Pods (Customizable)' },
+    { key: 'tablet', text: '📱 Tablet View (Tab-Based)' },
+    { key: 'sidebar', text: '📋 Sidebar Navigation (Workflow)' },
+    { key: 'floating', text: '🪟 Floating Panels (Power User)' }
+  ];
+
+  return layouts;
+};
+
 export default SpokenLanguageOptions;
 
