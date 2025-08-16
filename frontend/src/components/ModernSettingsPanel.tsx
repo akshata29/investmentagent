@@ -139,28 +139,14 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
       onDismiss={onDismiss}
       type={PanelType.medium}
       styles={panelStyles}
-      className="modern-panel slide-in"
+      className="modern-panel slide-in settings-theme-override"
     >
-      <div style={{ 
-        padding: 'var(--spacing-lg)', 
-        backgroundColor: 'var(--bg-panel)',
-        height: '100%',
-        overflowY: 'auto'
-      }}>
+      <div className="settings-panel-content">
         
         {/* Theme Section */}
         <div className="modern-section">
           <div className="modern-section-header">🎨 Appearance</div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            padding: 'var(--spacing-md)',
-            backgroundColor: 'var(--bg-secondary)',
-            borderRadius: 'var(--radius-md)',
-            border: `1px solid var(--border-primary)`,
-            marginBottom: 'var(--spacing-md)'
-          }}>
+          <div className="theme-mode-display">
             <div>
               <Label styles={labelStyles}>Theme Mode</Label>
               <div style={{ 
@@ -286,13 +272,7 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
         {/* Resources */}
         <div className="modern-section">
           <div className="modern-section-header">📚 Resources & Help</div>
-          <div style={{ 
-            padding: 'var(--spacing-md)',
-            backgroundColor: 'var(--bg-secondary)',
-            borderRadius: 'var(--radius-md)',
-            border: `1px solid var(--border-primary)`,
-            textAlign: 'center'
-          }}>
+          <div className="resources-content">
             <Label styles={labelStyles}>
               📹 Demo delivery instruction video & resources are{' '}
               <a 
@@ -312,12 +292,7 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div style={{ 
-          marginTop: 'var(--spacing-xl)', 
-          textAlign: 'center',
-          borderTop: `1px solid var(--border-primary)`,
-          paddingTop: 'var(--spacing-lg)'
-        }}>
+        <div className="settings-action-buttons">
           <ModernButton
             onClick={onDismiss}
             variant="primary"

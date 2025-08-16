@@ -15,6 +15,10 @@ import { insuranceConversationTemplate } from './ConversationTemplates';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ThemeToggle } from './components/ThemeToggle';
 import { ModernSettingsPanel } from './components/ModernSettingsPanel';
+import { UnifiedLiveGuidancePanel } from './components/UnifiedLiveGuidancePanel';
+import { ProgressLiveGuidancePanel } from './components/ProgressLiveGuidancePanel';
+import { KanbanLiveGuidancePanel } from './components/KanbanLiveGuidancePanel';
+import { ChatLiveGuidancePanel } from './components/ChatLiveGuidancePanel';
 import { ModernSection, ModernPivotSection, ModernTextArea } from './components/ModernSection';
 import { ModernButton, ModernIconButton } from './components/ModernButton';
 import { SentimentGauge } from './components/SentimentGauge';
@@ -105,6 +109,7 @@ interface AppState {
     connectionStatus: 'connected' | 'disconnected' | 'connecting';
     recommendation: string;
     isGeneratingRecommendation: boolean;
+    liveGuidanceViewMode: 'unified' | 'progress' | 'kanban' | 'chat';
 }export default class App extends Component<{}, AppState> {
   private containerRef: RefObject<HTMLDivElement>;
   
@@ -163,7 +168,8 @@ interface AppState {
         isProcessing: false,
         connectionStatus: 'disconnected',
         recommendation: 'Click "Generate Recommendations" to analyze the conversation and get personalized Fisher Investments recommendations.',
-        isGeneratingRecommendation: false
+        isGeneratingRecommendation: false,
+        liveGuidanceViewMode: 'unified'
     };  }
 
   handleSpokenLangDropdownChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
@@ -443,10 +449,29 @@ interface AppState {
       
       console.log(`Generating recommendation with full transcript (${transcriptText.length} chars):`, transcriptText.substring(0, 200) + '...');
       
-      // Check if there's sufficient content for recommendation
-      if (!transcriptText || transcriptText.length < 50 || transcriptText === 'Speak to your microphone or copy/paste conversation transcript here') {
+      // Enhanced validation for transcript content
+      if (!transcriptText || transcriptText.length < 50) {
         this.setState({ 
           recommendation: '***Waiting for More Client Information***\n\nPlease ensure you have captured sufficient conversation content including client\'s financial goals, risk tolerance, investment timeline, and current financial situation before generating recommendations.',
+          isGeneratingRecommendation: false 
+        });
+        return;
+      }
+      
+      // Check for placeholder text
+      if (transcriptText === 'Speak to your microphone or copy/paste conversation transcript here') {
+        this.setState({ 
+          recommendation: '🎤 **Start Your Conversation**\n\nPlease start recording your conversation or paste a conversation transcript to generate personalized investment recommendations.',
+          isGeneratingRecommendation: false 
+        });
+        return;
+      }
+      
+      // Validate transcript contains meaningful content (not just whitespace or special characters)
+      const meaningfulContent = transcriptText.replace(/[\s\n\r\t]/g, '').length;
+      if (meaningfulContent < 30) {
+        this.setState({ 
+          recommendation: '📝 **More Content Needed**\n\nThe current transcript appears to have limited content. Please ensure you have a substantial conversation about:\n\n• Financial goals and objectives\n• Investment timeline\n• Risk tolerance\n• Current financial situation\n\nThen try generating recommendations again.',
           isGeneratingRecommendation: false 
         });
         return;
@@ -455,30 +480,59 @@ interface AppState {
       const gptObj = await generateRecommendation(transcriptText);
       console.log('Recommendation response:', gptObj); // Debug log
       
-      // Handle different response structures
+      // Handle different response structures and errors
       let recommendationText = '';
       if (gptObj && gptObj.data) {
+        // Check if it's an error response from backend
         if (gptObj.data.message && gptObj.data.message.content) {
           recommendationText = gptObj.data.message.content;
+          
+          // Check if the response contains an error message
+          if (recommendationText.includes('Error generating recommendation:')) {
+            recommendationText = '⚠️ **Service Temporarily Unavailable**\n\nThe investment recommendation service is currently experiencing issues. This could be due to:\n\n• Azure OpenAI API rate limits\n• Network connectivity issues\n• Service configuration problems\n\nPlease try again in a few moments, or continue with other features while we resolve this issue.';
+          }
         } else if (gptObj.data.content) {
           recommendationText = gptObj.data.content;
         } else if (typeof gptObj.data === 'string') {
-          recommendationText = gptObj.data;
+          // Handle string error messages from API
+          if (gptObj.data.includes('Error occurred while generating investment recommendation:')) {
+            recommendationText = '⚠️ **Recommendation Service Error**\n\nThere was an issue connecting to the investment recommendation service. Please check:\n\n• Internet connection\n• Try refreshing the page\n• Contact support if the issue persists\n\nYou can continue using other features while we resolve this.';
+          } else {
+            recommendationText = gptObj.data;
+          }
         } else {
-          recommendationText = 'Unexpected response format from recommendation service.';
+          recommendationText = '⚠️ **Unexpected Response Format**\n\nThe recommendation service returned an unexpected response format. Please try again or contact support if the issue persists.';
         }
       } else {
-        recommendationText = 'No response received from recommendation service.';
+        recommendationText = '⚠️ **No Response Received**\n\nNo response was received from the recommendation service. Please check your internet connection and try again.';
       }
       
       this.setState({ 
         recommendation: recommendationText,
         isGeneratingRecommendation: false 
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating recommendation:', error);
+      
+      // Enhanced error handling with user-friendly messages
+      let userFriendlyError = '';
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        userFriendlyError = '🌐 **Connection Error**\n\nUnable to connect to the recommendation service. Please check your internet connection and try again.';
+      } else if (error.message && error.message.includes('timeout')) {
+        userFriendlyError = '⏱️ **Request Timeout**\n\nThe recommendation request is taking longer than expected. The service may be busy. Please try again in a moment.';
+      } else if (error.message && error.message.includes('400')) {
+        userFriendlyError = '📝 **Input Validation Error**\n\nThere may be an issue with the conversation transcript format. Please ensure you have a meaningful conversation recorded before generating recommendations.';
+      } else if (error.message && error.message.includes('429')) {
+        userFriendlyError = '🚦 **Service Busy**\n\nThe recommendation service is currently handling many requests. Please wait a few moments and try again.';
+      } else if (error.message && error.message.includes('500')) {
+        userFriendlyError = '⚙️ **Service Error**\n\nThe recommendation service is temporarily experiencing technical difficulties. Our team has been notified. Please try again later.';
+      } else {
+        userFriendlyError = `⚠️ **Recommendation Error**\n\nAn unexpected error occurred while generating recommendations.\n\n**Error Details:** ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease try again or contact support if the issue persists.`;
+      }
+      
       this.setState({ 
-        recommendation: `Error generating recommendation: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
+        recommendation: userFriendlyError,
         isGeneratingRecommendation: false 
       });
     }
@@ -672,38 +726,49 @@ interface AppState {
             onConversationTemplateChange={this.onConversationTemplateChange}
           />
 
-          {/* Live Guidance Section */}
+          {/* Live Guidance Section - Dynamic View Modes */}
           {this.state.copilotChecked && (
-            <div className="modern-grid modern-grid-2">
-              <ModernPivotSection
-                title="Live Guidance - Pending Tasks"
-                items={[{
-                  key: 'pending',
-                  headerText: 'Pending Tasks (Live Guidance)',
-                  content: (
-                    <ModernTextArea
-                      id="taskPendingTextarea"
-                      defaultValue={this.state.agentGuidance}
-                      rows={10}
-                    />
-                  )
-                }]}
-              />
+            <div>
+              {/* Render the selected view */}
+              {this.state.liveGuidanceViewMode === 'unified' && (
+                <UnifiedLiveGuidancePanel
+                  pendingTasks={this.state.agentGuidance}
+                  completedTasks={this.state.taskCompleted}
+                  isProcessing={this.state.isProcessing}
+                  currentViewMode={this.state.liveGuidanceViewMode}
+                  onViewModeChange={(mode) => this.setState({ liveGuidanceViewMode: mode })}
+                />
+              )}
               
-              <ModernPivotSection
-                title="Live Guidance - Completed Tasks"
-                items={[{
-                  key: 'completed',
-                  headerText: 'Completed Tasks (Live Guidance)',
-                  content: (
-                    <ModernTextArea
-                      id="taskCompletedTextarea"
-                      defaultValue={this.state.taskCompleted}
-                      rows={10}
-                    />
-                  )
-                }]}
-              />
+              {this.state.liveGuidanceViewMode === 'progress' && (
+                <ProgressLiveGuidancePanel
+                  pendingTasks={this.state.agentGuidance}
+                  completedTasks={this.state.taskCompleted}
+                  isProcessing={this.state.isProcessing}
+                  currentViewMode={this.state.liveGuidanceViewMode}
+                  onViewModeChange={(mode) => this.setState({ liveGuidanceViewMode: mode })}
+                />
+              )}
+              
+              {this.state.liveGuidanceViewMode === 'kanban' && (
+                <KanbanLiveGuidancePanel
+                  pendingTasks={this.state.agentGuidance}
+                  completedTasks={this.state.taskCompleted}
+                  isProcessing={this.state.isProcessing}
+                  currentViewMode={this.state.liveGuidanceViewMode}
+                  onViewModeChange={(mode) => this.setState({ liveGuidanceViewMode: mode })}
+                />
+              )}
+              
+              {this.state.liveGuidanceViewMode === 'chat' && (
+                <ChatLiveGuidancePanel
+                  pendingTasks={this.state.agentGuidance}
+                  completedTasks={this.state.taskCompleted}
+                  isProcessing={this.state.isProcessing}
+                  currentViewMode={this.state.liveGuidanceViewMode}
+                  onViewModeChange={(mode) => this.setState({ liveGuidanceViewMode: mode })}
+                />
+              )}
             </div>
           )}
 

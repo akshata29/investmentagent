@@ -540,11 +540,13 @@ body {
 /* Override Fluent UI Panel styles for better theming */
 .ms-Panel-main {
   background-color: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
 }
 
 .ms-Panel-header {
   background-color: var(--color-primary) !important;
   color: var(--text-on-primary) !important;
+  border-bottom: 1px solid var(--border-primary) !important;
 }
 
 .ms-Panel-headerText {
@@ -554,10 +556,197 @@ body {
 
 .ms-Panel-content {
   background-color: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
 }
 
 .ms-Panel-scrollableContent {
   background-color: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Settings Panel Section Styling */
+.modern-panel .modern-section {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--radius-lg) !important;
+  margin-bottom: var(--spacing-lg) !important;
+  padding: var(--spacing-lg) !important;
+}
+
+.modern-panel .modern-section-header {
+  color: var(--text-primary) !important;
+  border-bottom: 2px solid var(--border-primary) !important;
+}
+
+/* Ensure proper background for settings content containers */
+.modern-panel div[style*="background-color"] {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Fix for inline styles that override theme */
+.modern-panel [style*="backgroundColor"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Theme mode display section */
+.modern-panel .modern-section div[style*="display: flex"] {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Theme mode display styling */
+.theme-mode-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  background-color: var(--bg-tertiary) !important;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary) !important;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Resources content styling */
+.resources-content {
+  padding: var(--spacing-md);
+  background-color: var(--bg-tertiary) !important;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary) !important;
+  text-align: center;
+}
+
+/* Settings panel main content container */
+.settings-panel-content {
+  padding: var(--spacing-lg);
+  background-color: var(--bg-panel) !important;
+  height: 100%;
+  overflow-y: auto;
+  color: var(--text-primary) !important;
+}
+
+/* Additional panel overrides for better theme consistency */
+.ms-Panel .modern-section {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Ensure all divs in panel respect theme */
+.ms-Panel div {
+  color: var(--text-primary);
+}
+
+/* Panel close button theming */
+.ms-Panel-closeButton {
+  color: var(--text-on-primary) !important;
+}
+
+.ms-Panel-closeButton:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Action button area theming */
+.ms-Panel [style*="borderTop"] {
+  border-top: 1px solid var(--border-primary) !important;
+  background-color: var(--bg-panel) !important;
+}
+
+/* Settings action buttons styling */
+.settings-action-buttons {
+  margin-top: var(--spacing-xl);
+  text-align: center;
+  border-top: 1px solid var(--border-primary);
+  padding-top: var(--spacing-lg);
+  background-color: var(--bg-panel) !important;
+}
+
+/* Comprehensive Panel Theme Overrides */
+.ms-Panel * {
+  color: var(--text-primary) !important;
+}
+
+.ms-Panel .ms-Panel-main * {
+  background-color: inherit;
+}
+
+/* Force theme colors on all panel content */
+.ms-Panel-content *[style] {
+  background-color: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Specific overrides for inline styled divs */
+.ms-Panel div[style*="backgroundColor"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+.ms-Panel div[style*="background-color"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Override any hardcoded background colors */
+.ms-Panel .modern-section > div[style] {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-primary) !important;
+}
+
+/* Theme mode display - force proper colors */
+.ms-Panel .theme-mode-display {
+  background-color: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.ms-Panel .theme-mode-display * {
+  color: var(--text-primary) !important;
+}
+
+/* Resources content - force proper colors */
+.ms-Panel .resources-content {
+  background-color: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.ms-Panel .resources-content * {
+  color: var(--text-primary) !important;
+}
+
+/* Settings panel sections - ensure they inherit theme */
+.ms-Panel .modern-section {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.ms-Panel .modern-section * {
+  color: inherit !important;
+}
+
+.ms-Panel .modern-section-header {
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--border-primary) !important;
+}
+
+/* Override any remaining white/light backgrounds in dark mode */
+[data-theme="dark"] .ms-Panel div[style*="background"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .ms-Panel .modern-section > div {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Light mode specific overrides */
+[data-theme="light"] .ms-Panel div[style*="background"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="light"] .ms-Panel .modern-section > div {
+  background-color: var(--bg-tertiary) !important;
 }
 
 /* Override Fluent UI Dropdown styles */
@@ -938,4 +1127,162 @@ body {
   0% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.2); }
   100% { opacity: 1; transform: scale(1); }
+}
+
+/* FINAL OVERRIDES - Settings Panel Theme Fix */
+/* These rules are placed last to ensure they take precedence */
+
+.ms-Panel-main {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+.ms-Panel-content {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+.ms-Panel-scrollableContent {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force all content in settings panel to use theme colors */
+.ms-Panel * {
+  color: var(--text-primary) !important;
+}
+
+.ms-Panel div {
+  background-color: transparent !important;
+}
+
+.ms-Panel .modern-section {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-primary) !important;
+}
+
+.ms-Panel .theme-mode-display,
+.ms-Panel .resources-content {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-primary) !important;
+}
+
+/* Last resort - override inline styles */
+.ms-Panel [style*="backgroundColor"],
+.ms-Panel [style*="background-color"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+.ms-Panel .modern-section [style*="backgroundColor"],
+.ms-Panel .modern-section [style*="background-color"] {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Settings Theme Override - Comprehensive Fix */
+.settings-theme-override {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override *,
+.settings-theme-override *::before,
+.settings-theme-override *::after {
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+}
+
+.settings-theme-override .ms-Panel-main {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override .ms-Panel-content {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override .ms-Panel-scrollableContent {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override .modern-section {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override .theme-mode-display {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override .resources-content {
+  background: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override .settings-panel-content {
+  background: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Ultra-aggressive override - this should force any styled divs to use theme */
+.settings-theme-override div[style],
+.settings-theme-override span[style],
+.settings-theme-override p[style] {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override .modern-section div[style],
+.settings-theme-override .modern-section span[style] {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force specific components to use theme colors */
+.settings-theme-override .theme-mode-display,
+.settings-theme-override .theme-mode-display * {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.settings-theme-override .resources-content,
+.settings-theme-override .resources-content * {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force immediate theme update on theme change */
+[data-theme="light"] .settings-theme-override {
+  --bg-panel: #ffffff !important;
+  --bg-secondary: #f8fafc !important;
+  --bg-tertiary: #f1f5f9 !important;
+  --bg-card: #ffffff !important;
+  --text-primary: #1e293b !important;
+  --text-secondary: #64748b !important;
+  --border-primary: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .settings-theme-override {
+  --bg-panel: #1e293b !important;
+  --bg-secondary: #1e293b !important;
+  --bg-tertiary: #334155 !important;
+  --bg-card: #1e293b !important;
+  --text-primary: #f8fafc !important;
+  --text-secondary: #cbd5e1 !important;
+  --border-primary: #334155 !important;
+}
+
+/* Force all elements in settings to update when theme changes */
+[data-theme] .settings-theme-override *,
+[data-theme] .settings-theme-override div,
+[data-theme] .settings-theme-override .modern-section,
+[data-theme] .settings-theme-override .theme-mode-display,
+[data-theme] .settings-theme-override .resources-content {
+  transition: background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease !important;
 }
