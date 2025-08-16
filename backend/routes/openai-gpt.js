@@ -366,5 +366,158 @@ If sufficient information is available, provide 4 concise bullet points recommen
     }       
 });
 
+//Post operation /gpt/marketinsights - Generate market analysis and insights  
+router.post('/gpt/marketinsights', async (req, res) => {
+    try {
+        const conversation_transcript = req.body.transcript;
+        
+        // Input validation
+        if (!conversation_transcript) {
+            return res.status(400).send({
+                message: { 
+                    content: 'Error generating market insights: No transcript provided' 
+                }
+            });
+        }
+        
+        if (typeof conversation_transcript !== 'string') {
+            return res.status(400).send({
+                message: { 
+                    content: 'Error generating market insights: Invalid transcript format' 
+                }
+            });
+        }
+        
+        if (conversation_transcript.length < 10) {
+            return res.status(400).send({
+                message: { 
+                    content: 'Error generating market insights: Transcript too short for analysis' 
+                }
+            });
+        }
+        
+        console.log(`Generating market insights with FULL transcript (${conversation_transcript.length} characters)`);
+        
+        // Check if Azure OpenAI configuration is available
+        if (!aoai_chatgpt_4_endpoint || !aoai_chatgpt_4_deployment_name || !aoai_chatgpt_4_api_version || !aoai_chatgpt_4_key) {
+            console.error('Azure OpenAI configuration missing');
+            return res.status(500).send({
+                message: { 
+                    content: 'Error generating market insights: Service configuration issue' 
+                }
+            });
+        }
+        
+        const url = aoai_chatgpt_4_endpoint + 'openai/deployments/' + aoai_chatgpt_4_deployment_name + '/chat/completions?api-version=' + aoai_chatgpt_4_api_version;
+    
+        const system_content = `Act as a Fisher Investments senior market research analyst who specializes in providing market insights and analysis based on client conversation patterns.
+
+You are analyzing a COMPLETE conversation transcript between a Fisher Investments advisor and a client. Your task is to generate market insights that would be relevant to this specific client discussion and their investment profile based on what was discussed.
+
+IMPORTANT: Analyze the FULL conversation to understand:
+- Client's investment preferences and risk tolerance
+- Timeline and investment horizon mentioned
+- Asset classes or sectors of interest
+- Economic concerns or market views expressed
+- Investment experience level
+- Geographic preferences (domestic vs international)
+
+Generate market insights that would be particularly relevant to this client's profile. Focus on:
+- Current market trends that align with their investment preferences
+- Economic indicators relevant to their timeline and risk tolerance
+- Sector analysis for areas they showed interest in
+- Market opportunities that match their profile
+- Risk factors they should be aware of based on their situation
+
+IMPORTANT CONSTRAINTS:
+- If the transcript lacks sufficient information about the client's investment preferences or profile, respond with: "***Insufficient Client Context for Market Analysis***"
+- Generate insights that are specifically relevant to the client profile discussed
+- Focus on actionable market intelligence that would help this particular client
+- Keep insights professional and based on realistic market analysis
+
+Provide 4-6 concise bullet points with current market insights that would be most relevant to this specific client based on their conversation context.`;
+
+        const messages = [
+            { role: "system", content: system_content },
+            { role: "user", content: `Here's the COMPLETE conversation transcript between the Fisher Investments advisor and client. Please analyze the conversation to understand the client's investment profile and generate relevant market insights:\n\n${conversation_transcript}\n\nBased on the client profile and preferences discussed in this conversation, provide market insights that would be most relevant to them.`},
+        ];
+        
+        var starttime = new Date();
+        const headers = {'Content-Type': 'application/json', 'api-key': aoai_chatgpt_4_key};
+        
+        console.log("Calling Azure OpenAI for market insights...");
+        
+        const data = {
+            messages: messages,
+            max_tokens: 800,
+            temperature: 0.1,
+            top_p: 0.9,
+            frequency_penalty: 0,
+            presence_penalty: 0
+        };
+        
+        const response = await axios.post(url, data, { headers });
+        
+        var endtime = new Date();
+        var elapsedtime = endtime - starttime;
+        
+        console.log("Azure OpenAI Response Status:", response.status);
+        console.log("Market insights generated successfully in", elapsedtime, "ms");
+        
+        if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message) {
+            const marketInsights = response.data.choices[0].message.content;
+            console.log("Generated market insights:", marketInsights.substring(0, 200) + "...");
+            
+            res.send({
+                message: { 
+                    content: marketInsights,
+                    timestamp: new Date().toISOString(),
+                    processing_time_ms: elapsedtime
+                }
+            });
+            
+            // writeData(req.body.transcript, "market-insights", response.data, req.ip, "market-analysis");
+        } else {
+            console.error("Unexpected response format from Azure OpenAI");
+            res.status(500).send({
+                message: { 
+                    content: 'Error generating market insights: Unexpected response format'
+                }
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error generating market insights:', error.message);
+        
+        if (error.response) {
+            console.error('Azure OpenAI API Error:', error.response.status, error.response.data);
+            res.status(error.response.status).send({
+                message: { 
+                    content: `Error generating market insights: ${error.response.data?.error?.message || 'API Error'}`,
+                    error_type: 'api_error'
+                }
+            });
+        } else if (error.request) {
+            console.error('Network Error:', error.request);
+            res.status(500).send({
+                message: { 
+                    content: 'Error generating market insights: Network connection issue',
+                    error_type: 'network_error'
+                }
+            });
+        } else {
+            console.error('Configuration Error:', error.message);
+            res.status(500).send({
+                message: { 
+                    content: 'Error generating market insights: Service configuration issue',
+                    error_type: 'config_error'
+                }
+            });
+        }
+        
+        // writeData(req.body.transcript, "market-insights", error, req.ip, "market-analysis");
+    }       
+});
+
 module.exports = router;
 

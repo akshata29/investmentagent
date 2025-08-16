@@ -26,6 +26,10 @@ import { StatusBar } from './components/StatusBar';
 import { NotificationSystem, useNotifications } from './components/NotificationSystem';
 import { RecommendationPanel } from './components/RecommendationPanel';
 import { CombinedInsightsPanel } from './components/CombinedInsightsPanel';
+import { SmartNotificationHeader } from './components/SmartNotificationHeader';
+import { EnhancedRecommendationPanel } from './components/EnhancedRecommendationPanel';
+import { InvestmentIntelligenceDashboard } from './components/InvestmentIntelligenceDashboard';
+import { ClientEngagementWorkflow } from './components/ClientEngagementWorkflow';
 
 let recognizer: any;
 // Define an interface for the image object  
@@ -110,6 +114,21 @@ interface AppState {
     recommendation: string;
     isGeneratingRecommendation: boolean;
     liveGuidanceViewMode: 'unified' | 'progress' | 'kanban' | 'chat';
+    // Notification system for recommendation alerts
+    newRecommendationCount: number;
+    lastRecommendationTime: Date | null;
+    showRecommendationAlert: boolean;
+    recommendationHistory: Array<{
+        id: string;
+        content: string;
+        timestamp: Date;
+        isRead: boolean;
+        priority: 'low' | 'medium' | 'high';
+    }>;
+    // Enhanced features control
+    showEnhancedFeatures: boolean;
+    showIntelligenceDashboard: boolean;
+    showClientWorkflow: boolean;
 }export default class App extends Component<{}, AppState> {
   private containerRef: RefObject<HTMLDivElement>;
   
@@ -135,7 +154,7 @@ interface AppState {
         gptvInsights: '',  
         copilotChecked: true,  
         showPhotoPanel: false,
-        showPromptPanel: true,
+        showPromptPanel: false,
         showTranscriptPanel: true,
         showPIIRedactedTranscript: true,
         sentimentData: {
@@ -169,8 +188,68 @@ interface AppState {
         connectionStatus: 'disconnected',
         recommendation: 'Click "Generate Recommendations" to analyze the conversation and get personalized Fisher Investments recommendations.',
         isGeneratingRecommendation: false,
-        liveGuidanceViewMode: 'unified'
+        liveGuidanceViewMode: 'unified',
+        // Initialize notification system
+        newRecommendationCount: 0,
+        lastRecommendationTime: null,
+        showRecommendationAlert: false,
+        recommendationHistory: [],
+        // Enhanced features control
+        showEnhancedFeatures: true,
+        showIntelligenceDashboard: true,
+        showClientWorkflow: false
     };  }
+
+  // Notification system methods
+  addRecommendationAlert = (content: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
+    const newAlert = {
+      id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      content,
+      timestamp: new Date(),
+      isRead: false,
+      priority
+    };
+
+    this.setState(prevState => ({
+      recommendationHistory: [newAlert, ...prevState.recommendationHistory],
+      newRecommendationCount: prevState.newRecommendationCount + 1,
+      lastRecommendationTime: new Date(),
+      showRecommendationAlert: true
+    }));
+
+    // Auto-hide alert after 5 seconds
+    setTimeout(() => {
+      this.setState({ showRecommendationAlert: false });
+    }, 5000);
+  };
+
+  markRecommendationAsRead = (id: string) => {
+    this.setState(prevState => ({
+      recommendationHistory: prevState.recommendationHistory.map(alert =>
+        alert.id === id ? { ...alert, isRead: true } : alert
+      ),
+      newRecommendationCount: Math.max(0, prevState.newRecommendationCount - 1)
+    }));
+  };
+
+  markAllRecommendationsAsRead = () => {
+    this.setState(prevState => ({
+      recommendationHistory: prevState.recommendationHistory.map(alert => ({ ...alert, isRead: true })),
+      newRecommendationCount: 0
+    }));
+  };
+
+  viewRecommendation = (id: string) => {
+    const alert = this.state.recommendationHistory.find(a => a.id === id);
+    if (alert) {
+      this.setState({ recommendation: alert.content });
+      // Scroll to recommendation section
+      const recommendationElement = document.querySelector('.recommendation-panel');
+      if (recommendationElement) {
+        recommendationElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  };
 
   handleSpokenLangDropdownChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
     if (option) {
@@ -207,6 +286,25 @@ interface AppState {
   handlePromptPanelToggleChange = () => {
     this.setState((prevState) => ({
       showPromptPanel: !prevState.showPromptPanel,
+    }));
+  };
+
+  // Enhanced features toggle handlers
+  handleEnhancedFeaturesToggleChange = () => {
+    this.setState((prevState) => ({
+      showEnhancedFeatures: !prevState.showEnhancedFeatures,
+    }));
+  };
+
+  handleIntelligenceDashboardToggleChange = () => {
+    this.setState((prevState) => ({
+      showIntelligenceDashboard: !prevState.showIntelligenceDashboard,
+    }));
+  };
+
+  handleClientWorkflowToggleChange = () => {
+    this.setState((prevState) => ({
+      showClientWorkflow: !prevState.showClientWorkflow,
     }));
   };
 
@@ -511,6 +609,33 @@ interface AppState {
         recommendation: recommendationText,
         isGeneratingRecommendation: false 
       });
+
+      // Create alert for new recommendation (only if it's not an error or waiting message)
+      if (!recommendationText.includes('Error') && 
+          !recommendationText.includes('***Waiting for More Client Information***') &&
+          !recommendationText.includes('Start Your Conversation') &&
+          !recommendationText.includes('More Content Needed')) {
+        
+        // Determine priority based on content analysis
+        let priority: 'low' | 'medium' | 'high' = 'medium';
+        
+        if (recommendationText.toLowerCase().includes('urgent') || 
+            recommendationText.toLowerCase().includes('immediate') ||
+            recommendationText.toLowerCase().includes('critical')) {
+          priority = 'high';
+        } else if (recommendationText.toLowerCase().includes('consider') ||
+                   recommendationText.toLowerCase().includes('potential')) {
+          priority = 'low';
+        }
+
+        // Create alert notification
+        this.addRecommendationAlert(recommendationText, priority);
+        
+        // Auto-enable client workflow for successful recommendations
+        if (!this.state.showClientWorkflow) {
+          this.setState({ showClientWorkflow: true });
+        }
+      }
     } catch (error: any) {
       console.error('Error generating recommendation:', error);
       
@@ -682,6 +807,15 @@ interface AppState {
                     variant="secondary"
                   />
 
+                  {/* Smart Notification System */}
+                  <SmartNotificationHeader
+                    newRecommendationCount={this.state.newRecommendationCount}
+                    recommendationHistory={this.state.recommendationHistory}
+                    onMarkAsRead={this.markRecommendationAsRead}
+                    onMarkAllAsRead={this.markAllRecommendationsAsRead}
+                    onViewRecommendation={this.viewRecommendation}
+                  />
+
                   <ThemeToggle variant="inline" />
                 </div>
               </div>
@@ -724,6 +858,13 @@ interface AppState {
             onCopilotToggle={this.handleToggleChange}
             conversationTemplate={this.state.conversationTemplate}
             onConversationTemplateChange={this.onConversationTemplateChange}
+            // Enhanced features props
+            showEnhancedFeatures={this.state.showEnhancedFeatures}
+            onEnhancedFeaturesToggle={this.handleEnhancedFeaturesToggleChange}
+            showIntelligenceDashboard={this.state.showIntelligenceDashboard}
+            onIntelligenceDashboardToggle={this.handleIntelligenceDashboardToggleChange}
+            showClientWorkflow={this.state.showClientWorkflow}
+            onClientWorkflowToggle={this.handleClientWorkflowToggleChange}
           />
 
           {/* Live Guidance Section - Dynamic View Modes */}
@@ -813,12 +954,48 @@ interface AppState {
             </div>
           )}
 
+          {/* Investment Intelligence Dashboard */}
+          {this.state.showIntelligenceDashboard && (
+            <InvestmentIntelligenceDashboard
+              conversationText={this.state.displayText}
+              sentimentData={this.state.sentimentData}
+              transcriptEventCount={this.state.transcriptEventCount}
+              recommendation={this.state.recommendation}
+              onGenerateInsights={() => console.log('Generating market insights...')}
+            />
+          )}
+
           {/* Investment Recommendations Section */}
-          <RecommendationPanel
-            recommendation={this.state.recommendation}
-            isGenerating={this.state.isGeneratingRecommendation}
-            onGenerateRecommendation={() => this.generateInvestmentRecommendation()}
-          />
+          {this.state.showEnhancedFeatures ? (
+            <EnhancedRecommendationPanel
+              recommendation={this.state.recommendation}
+              isGenerating={this.state.isGeneratingRecommendation}
+              onGenerateRecommendation={() => this.generateInvestmentRecommendation()}
+              conversationTranscript={this.state.displayText}
+              sentimentData={this.state.sentimentData}
+              keyPhrases={this.state.displayKeyPhrases}
+            />
+          ) : (
+            <RecommendationPanel
+              recommendation={this.state.recommendation}
+              isGenerating={this.state.isGeneratingRecommendation}
+              onGenerateRecommendation={() => this.generateInvestmentRecommendation()}
+            />
+          )}
+
+          {/* Client Engagement Workflow */}
+          {this.state.showClientWorkflow && !this.state.recommendation.includes('***Waiting for More Client Information***') && !this.state.recommendation.includes('Error') && (
+            <ClientEngagementWorkflow
+              recommendation={this.state.recommendation}
+              conversationText={this.state.displayText}
+              sentimentData={this.state.sentimentData}
+              clientName="Sarah Johnson"
+              onScheduleMeeting={() => console.log('Scheduling meeting...')}
+              onSendEmail={() => console.log('Sending email preview...')}
+              onCreatePitch={() => console.log('Creating client pitch...')}
+              onGenerateReport={() => console.log('Generating formal report...')}
+            />
+          )}
 
           {/* Custom Prompts Section */}
           {this.state.showPromptPanel && (

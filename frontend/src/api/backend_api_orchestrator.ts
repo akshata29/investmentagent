@@ -198,6 +198,72 @@ export async function generateRecommendation(transcriptText: string): Promise<an
   }
 }
 
+export async function generateMarketInsights(transcriptText: string): Promise<any> {
+  try {
+    // Market insights generation
+    const data = { transcript: transcriptText };
+    const headers = { 'Content-Type': 'application/json' };
+    const res = await axios.post('/openai/gpt/marketinsights', data, { headers });
+    return res;
+  } catch (err: any) {
+    console.error('API Error in generateMarketInsights:', err);
+    
+    // Enhanced error handling with specific error details
+    let errorMessage = 'Unknown error occurred';
+    
+    if (err.response) {
+      // Server responded with error status
+      const status = err.response.status;
+      const statusText = err.response.statusText || 'Unknown Error';
+      
+      switch (status) {
+        case 400:
+          errorMessage = 'Bad Request - Invalid input data or malformed request';
+          break;
+        case 401:
+          errorMessage = 'Unauthorized - API key or authentication issue';
+          break;
+        case 403:
+          errorMessage = 'Forbidden - Access denied to the service';
+          break;
+        case 429:
+          errorMessage = 'Rate Limited - Too many requests, please try again later';
+          break;
+        case 500:
+          errorMessage = 'Internal Server Error - Service temporarily unavailable';
+          break;
+        case 502:
+          errorMessage = 'Bad Gateway - Upstream service error';
+          break;
+        case 503:
+          errorMessage = 'Service Unavailable - Server temporarily overloaded';
+          break;
+        default:
+          errorMessage = `HTTP ${status}: ${statusText}`;
+      }
+      
+      // Include response data if available
+      if (err.response.data) {
+        console.error('Error response data:', err.response.data);
+      }
+    } else if (err.request) {
+      // Network error
+      errorMessage = 'Network Error - Unable to connect to the service';
+    } else {
+      // Other error
+      errorMessage = err.message || 'Unknown error occurred';
+    }
+    
+    return {
+      data: {
+        message: {
+          content: `Error generating market insights: ${errorMessage}`
+        }
+      }
+    };
+  }
+}
+
 
 
   

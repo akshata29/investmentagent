@@ -6,7 +6,8 @@ import {
   IDropdownOption, 
   TextField, 
   Label,
-  Toggle
+  Toggle,
+  Text
 } from '@fluentui/react';
 import { useTheme } from '../contexts/ThemeContext';
 import { ModernButton } from './ModernButton';
@@ -30,6 +31,13 @@ interface ModernSettingsPanelProps {
   onCopilotToggle: () => void;
   conversationTemplate: string;
   onConversationTemplateChange: () => void;
+  // Enhanced features
+  showEnhancedFeatures?: boolean;
+  onEnhancedFeaturesToggle?: () => void;
+  showIntelligenceDashboard?: boolean;
+  onIntelligenceDashboardToggle?: () => void;
+  showClientWorkflow?: boolean;
+  onClientWorkflowToggle?: () => void;
 }
 
 export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
@@ -48,7 +56,14 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
   copilotChecked,
   onCopilotToggle,
   conversationTemplate,
-  onConversationTemplateChange
+  onConversationTemplateChange,
+  // Enhanced features
+  showEnhancedFeatures = true,
+  onEnhancedFeaturesToggle,
+  showIntelligenceDashboard = true,
+  onIntelligenceDashboardToggle,
+  showClientWorkflow = false,
+  onClientWorkflowToggle
 }) => {
   const { isDark, theme } = useTheme();
 
@@ -133,13 +148,76 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
 
   return (
     <Panel
-      headerText="⚙️ Application Settings"
       isOpen={isOpen}
       isBlocking={false}
       onDismiss={onDismiss}
       type={PanelType.medium}
+      hasCloseButton={false}
+      onRenderHeader={() => (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '16px 24px',
+          backgroundColor: 'var(--color-primary)',
+          color: 'var(--text-on-primary)',
+          borderBottom: '2px solid var(--border-primary)',
+          minHeight: '60px'
+        }}>
+          <Text variant="large" style={{ 
+            color: 'var(--text-on-primary)', 
+            fontWeight: '600',
+            fontSize: 'var(--font-size-lg)'
+          }}>
+            ⚙️ Application Settings
+          </Text>
+          <button
+            onClick={onDismiss}
+            style={{
+              background: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.9)',
+              border: isDark ? '2px solid #ffffff' : '2px solid #333333',
+              borderRadius: '8px',
+              width: '40px',
+              height: '40px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              color: isDark ? '#ffffff' : '#000000',
+              boxShadow: isDark ? '0 2px 8px rgba(255,255,255,0.2)' : '0 2px 8px rgba(0,0,0,0.3)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (isDark) {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                e.currentTarget.style.borderColor = '#ffffff';
+              } else {
+                e.currentTarget.style.background = '#ffffff';
+                e.currentTarget.style.borderColor = '#333333';
+              }
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              if (isDark) {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.borderColor = '#ffffff';
+              } else {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.borderColor = '#333333';
+              }
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title="Close settings"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       styles={panelStyles}
-      className="modern-panel slide-in settings-theme-override"
+      className="modern-panel slide-in"
     >
       <div className="settings-panel-content">
         
@@ -243,6 +321,42 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
               label="Live Guidance"
               checked={copilotChecked}
               onChange={onCopilotToggle}
+              onText="Enabled"
+              offText="Disabled"
+              inlineLabel
+              styles={toggleStyles}
+            />
+          </div>
+        </div>
+
+        {/* Enhanced Investment Features */}
+        <div className="modern-section fade-in">
+          <div className="modern-section-header">💼 Enhanced Investment Features</div>
+          <div style={{ display: 'grid', gap: 'var(--spacing-sm)' }}>
+            <Toggle
+              label="Enhanced Recommendation Panel"
+              checked={showEnhancedFeatures}
+              onChange={onEnhancedFeaturesToggle}
+              onText="Enhanced UI"
+              offText="Standard UI"
+              inlineLabel
+              styles={toggleStyles}
+            />
+
+            <Toggle
+              label="Investment Intelligence Dashboard"
+              checked={showIntelligenceDashboard}
+              onChange={onIntelligenceDashboardToggle}
+              onText="Shown"
+              offText="Hidden"
+              inlineLabel
+              styles={toggleStyles}
+            />
+
+            <Toggle
+              label="Client Engagement Workflow"
+              checked={showClientWorkflow}
+              onChange={onClientWorkflowToggle}
               onText="Enabled"
               offText="Disabled"
               inlineLabel

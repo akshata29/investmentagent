@@ -639,14 +639,7 @@ body {
   color: var(--text-primary);
 }
 
-/* Panel close button theming */
-.ms-Panel-closeButton {
-  color: var(--text-on-primary) !important;
-}
-
-.ms-Panel-closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
-}
+/* Custom close buttons are now handled inline - no need for CSS overrides */
 
 /* Action button area theming */
 .ms-Panel [style*="borderTop"] {
