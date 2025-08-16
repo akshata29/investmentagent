@@ -1,0 +1,25 @@
+[
+    {
+        "name": "speech",
+        "speech_subscription_key": "",
+        "speech_region": "eastus",
+        "speech_custom_endpoint_id_optional": "",
+        "text_analytics_key": "",
+        "text_analytics_endpoint": "https://.cognitiveservices.azure.com/",
+        "openai_endpoint": "https://.openai.azure.com/",
+        "openai_key": "",
+        "openai_deployment_name": "chat4o",
+        "aoai_chatgpt_4_endpoint": "https://.openai.azure.com/",
+        "aoai_chatgpt_4_key": "",
+        "aoai_chatgpt_4_deployment_name": "chat4o",
+        "aoai_realtime_deployment_name": "chat4ort",
+        "aoai_chatgpt_4_api_version": "2024-10-01-preview",
+        "consmosdb_connection_string": "AccountEndpoint=https://.documents.azure.com:443/;AccountKey=<AccountKey>==;",
+        "web_port": "8080",
+        "azure_storage_connection_string" : "",
+        "azure_storage_account_name" : "astdnasa",
+        "azure_storage_container_name" : "chatpdf",
+        "gptv_endpoint" : "https://.openai.azure.com/",
+        "gptv_key" : ""
+    }
+]

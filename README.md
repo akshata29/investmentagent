@@ -1,80 +1,5 @@
 # Investment Agent - Conversation Copilot with Multimodal Azure AI
 
-**🚀 Enhanced with Modern UI Layouts and Advanced Investment Intelligence**
-
-Inves3.	**Prepare and run the frontend app (in frontend folder)**
-    +	Go to frontend directory and run `npm install` to install dependencies.
-    +	Update the backend API endpoint in the frontend configuration if needed (typically in src/api/ folder)
-        +	If backend is running on local machine using port 8080 then ensure the API calls point to `http://localhost:8080`
-    +   Start frontend web app by running `npm run dev`. 
-    +	Open a browser and go to `http://localhost:5173` (or the port shown in terminal) to access the app. 
-    +   **🎨 Choose Your Layout**: Click the ⚙️ Settings button to access Application Settings and select from 9 different layout modes
-    +   **🎤 Start Investment Session**: Click "Start Conversation" and begin discussing investment topics. The AI will provide real-time guidance and recommendations
-    +   **📊 Explore Features**: Try different view modes (Unified, Chat, Kanban, Progress) and generate investment recommendations
-    +   Remember to click "End Conversation" to stop live transcription and save insights.
-
-## 🚀 Getting Started with Layout Modes
-
-1. **First Time Users**: Start with "📐 Dashboard Grid" for the best no-scroll experience
-2. **Presentations**: Use "🔍 Spotlight Focus" for clean, focused displays  
-3. **Trading Environments**: Try "🎯 Command Center" for high-density information
-4. **Mobile/Tablet**: Select "📱 Tablet View" for touch-optimized interface
-5. **Power Users**: Experiment with "🌊 Floating Pods" for maximum customizationAgent is a sophisticated web-based application that enables you to simulate Agent-Customer interactions specifically designed for investment and financial advisory scenarios. It showcases the power of AI to act as an effective copilot, using Azure AI's powerful multimodal understanding of long-form text, images, and advanced reasoning capabilities to provide intelligent investment recommendations and real-time guidance.
-
-<img src="common/images/solution-overview.png" align="center" />
-
-## 🎯 **New Features & Modern UI Layouts**
-
-This solution now includes **9 different layout modes** designed for various use cases, from traditional interfaces to cutting-edge dashboard views:
-
-### **📊 Live Guidance View Modes**
-Choose from multiple intelligent guidance interfaces:
-
-#### **Unified View - Comprehensive Overview**
-<img src="common/images/HomePage_UnifiedView.png" align="center" />
-*Integrated view showing all guidance components in a single, organized interface*
-
-#### **Chat Interface - Conversational Guidance** 
-<img src="common/images/HomePage_Chat.png" align="center" />
-*Chat-style interface for natural, conversational AI guidance and recommendations*
-
-#### **Kanban Workflow - Task Management**
-<img src="common/images/HomePage_Kanban.png" align="center" />
-*Visual task board for tracking conversation progress and action items*
-
-#### **Progress Tracking - Milestone View**
-<img src="common/images/HomePage_Progress.png" align="center" />
-*Progress-based interface showing conversation milestones and completion status*
-
-### **💡 Investment Intelligence & Analytics**
-
-#### **Advanced Recommendation Engine**
-<img src="common/images/Recommendation_Analytics.png" align="center" />
-*Sophisticated investment recommendation system with sentiment analysis and market insights*
-
-#### **Real-time Sentiment & Transcript Analysis**
-<img src="common/images/Transcript_Sentiment.png" align="center" />
-*Live sentiment analysis combined with intelligent transcript processing for investment decision-making*
-
-#### **Client Engagement Workflow**
-<img src="common/images/Engagement_Workflow.png" align="center" />
-*Complete client engagement pipeline from initial contact to investment recommendation*
-
-### **🎨 Modern Layout Options**
-
-The application now supports **9 different layout modes** accessible through Application Settings:
-
-1. **📜 Original Layout** - Traditional vertical scrolling interface
-2. **📐 Dashboard Grid** - Professional 2x2 grid with no scrolling (Recommended)
-3. **🎯 Command Center** - Trading floor style with compact components  
-4. **🔍 Spotlight Focus** - Focus-based layout with contextual peripherals
-5. **🧠 Contextual Flow** - Smart adaptive layout based on context
-6. **🌊 Floating Pods** - Customizable floating information bubbles
-7. **📱 Tablet View** - Tab-based interface optimized for touch devices
-8. **📋 Sidebar Navigation** - Main content with collapsible sidebar
-9. **🪟 Floating Panels** - Draggable, resizable windows for power usersnversation Copilot with Multimodal Azure AI
-Conversation copilot is a web-based app that enables you to simulate Agent-Customer interactions (in any line of business) and shows the power of AI to act as a very effective copilot. It uses Azure AI’s powerful multimodal understanding of long-form text, images and ability to reason across the diverse data input to power the copilot experience.
-
 <img src="common/images/solution-overview.png" align="center" />
 
 **Solution highlights:**
@@ -103,6 +28,21 @@ Conversation copilot is a web-based app that enables you to simulate Agent-Custo
 8. **🎤 Real-time Conversation Transcript**: Transcription of live audio stream optimized for financial terminology
 9. **🔒 Entity Extraction & PII Detection**: Advanced privacy protection with real-time PII redaction for financial data
 10. **⚙️ Flexible Configuration**: Easily switch between layout modes and customize AI features through Application Settings
+
+### **🎨 Modern Layout Options**
+
+The application now supports **9 different layout modes** accessible through Application Settings:
+
+1. **📜 Original Layout** - Traditional vertical scrolling interface
+2. **📐 Dashboard Grid** - Professional 2x2 grid with no scrolling (Recommended)
+3. **🎯 Command Center** - Trading floor style with compact components  
+4. **🔍 Spotlight Focus** - Focus-based layout with contextual peripherals
+5. **🧠 Contextual Flow** - Smart adaptive layout based on context
+6. **🌊 Floating Pods** - Customizable floating information bubbles
+7. **📱 Tablet View** - Tab-based interface optimized for touch devices
+8. **📋 Sidebar Navigation** - Main content with collapsible sidebar
+9. **🪟 Floating Panels** - Draggable, resizable windows for power usersnversation Copilot with Multimodal Azure AI
+Conversation copilot is a web-based app that enables you to simulate Agent-Customer interactions (in any line of business) and shows the power of AI to act as a very effective copilot. It uses Azure AI’s powerful multimodal understanding of long-form text, images and ability to reason across the diverse data input to power the copilot experience.
 
 ## Architecture
 Below architecture diagram shows the key components of this solution. 

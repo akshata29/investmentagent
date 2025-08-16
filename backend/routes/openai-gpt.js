@@ -35,30 +35,42 @@ router.get('/gpt/sayhello', async (req, res) => {
 });
 
 router.post('/gpt/customPrompt', async (req, res) => {
-    const requestText = JSON.stringify(req.body.transcript);
-    const requestCustomPrompt = req.body.customPrompt;
-    const customParsePrompt = requestText + "\n\n" + requestCustomPrompt;
-    const url = openaiEndpoint + 'openai/deployments/' + openaiDeploymentName + '/completions?api-version=' + openaiApiVersion;
-    const headers = {'Content-Type': 'application/json', 'api-key': openaiKey};
-    var starttime = new Date();
+    // Migrate to Chat Completions to support GPT-4o deployments
+    const requestText = typeof req.body.transcript === 'string' ? req.body.transcript : JSON.stringify(req.body.transcript);
+    const requestCustomPrompt = req.body.customPrompt || '';
+
+    const url = aoai_chatgpt_4_endpoint + 'openai/deployments/' + aoai_chatgpt_4_deployment_name + '/chat/completions?api-version=' + aoai_chatgpt_4_api_version;
+    const headers = { 'Content-Type': 'application/json', 'api-key': aoai_chatgpt_4_key };
+
+    const system_content = `You are a helpful analytics assistant. Follow the user's custom instructions carefully and extract or analyze the content from the provided transcript.`;
+    const user_content = `TRANSCRIPT:\n${requestText}\n\nINSTRUCTIONS:\n${requestCustomPrompt}`;
+
     const params = {
-        "prompt": customParsePrompt,
-        "max_tokens": 1000,
-        "temperature": openaiTemperature,
-        "top_p": openaiTopP,
-        "frequency_penalty": openaiFrequencyPenalty,
-        "presence_penalty": openaiPresencePenalty
+        messages: [
+            { role: 'system', content: system_content },
+            { role: 'user', content: user_content }
+        ],
+        max_tokens: 1000,
+        temperature: openaiTemperature ?? 0.1,
+        top_p: openaiTopP ?? 1,
+        frequency_penalty: openaiFrequencyPenalty ?? 0,
+        presence_penalty: openaiPresencePenalty ?? 0
+    };
+
+    try {
+        const chatResponse = await axios.post(url, params, { headers });
+        // Maintain original response shape (choices[0]) for compatibility
+        res.send(chatResponse.data.choices[0]);
+        // var endtime = new Date() - starttime; // perf logging optional
+        // writeData(req.body.transcript, requestCustomPrompt, chatResponse.data.choices[0], req.ip, 'chatcompletion4-customPrompt');
+    } catch (error) {
+        if (error.response) {
+            console.error('ERROR WITH AZURE OPENAI API:', error.message + ' : ' + (error.response.data?.error?.message || ''));
+            return res.status(error.response.status).send(error.response.data);
+        }
+        console.error('ERROR WITH AZURE OPENAI API:', error.message);
+        res.status(500).send({ error: { message: error.message } });
     }
-    try{
-        const completionResponse = await axios.post(url, params, {headers: headers});
-        res.send(completionResponse.data.choices[0]);   
-        var endtime = new Date() - starttime;              
-        //writeData(req.body.transcript, requestCustomPrompt, completionResponse.data.choices[0], req.ip, "completion35-customPrompt", endtime)
-    }catch(error){
-        console.error('ERROR WITH AZURE OPENAI API:', error.message + " : " + error.response.data.error.message);
-        res.send(error.message)
-        //writeData(req.body.transcript, requestCustomPrompt, error, req.ip, "completion35-customPrompt")
-    }       
 });
 
 //Post operation /openai/gpt/agentassist4
@@ -517,6 +529,100 @@ Provide 4-6 concise bullet points with current market insights that would be mos
         
         // writeData(req.body.transcript, "market-insights", error, req.ip, "market-analysis");
     }       
+});
+
+// Post operation /gpt/pitch - Generate a detailed client pitch from transcript and recommendation
+router.post('/gpt/pitch', async (req, res) => {
+    try {
+        const conversation_transcript = req.body.transcript;
+        const recommendation_text = req.body.recommendation;
+        const sentimentData = req.body.sentimentData || null;
+
+        if (!conversation_transcript || !recommendation_text) {
+            return res.status(400).send({
+                message: {
+                    content: 'Error generating pitch: Missing transcript or recommendation'
+                }
+            });
+        }
+
+        if (!aoai_chatgpt_4_endpoint || !aoai_chatgpt_4_deployment_name || !aoai_chatgpt_4_api_version || !aoai_chatgpt_4_key) {
+            console.error('Azure OpenAI configuration missing');
+            return res.status(500).send({
+                message: {
+                    content: 'Error generating pitch: Service configuration issue'
+                }
+            });
+        }
+
+        const url = `${aoai_chatgpt_4_endpoint}openai/deployments/${aoai_chatgpt_4_deployment_name}/chat/completions?api-version=${aoai_chatgpt_4_api_version}`;
+        const headers = { 'Content-Type': 'application/json', 'api-key': aoai_chatgpt_4_key };
+
+        const system_content = `You are a senior Fisher Investments advisor crafting a professional, client-ready investment pitch document. 
+Format your output as clean Markdown, concise but comprehensive, with clear sections and bullet points. 
+Derive client details (name, email, phone, location) from the transcript when present; if missing, use 'On file' or omit the field. 
+Incorporate the provided AI-generated recommendation faithfully, refining for clarity and polish but preserving substance. 
+Return ONLY the Markdown document, no extra commentary.`;
+
+        const user_content = `TRANSCRIPT (full conversation):\n${conversation_transcript}\n\nRECOMMENDATION (AI-generated):\n${recommendation_text}\n\n${sentimentData ? `SENTIMENT DATA (optional):\n${JSON.stringify(sentimentData)}` : ''}\n\nTASK: Produce a detailed client pitch with the following sections:
+1) Title: '# Investment Recommendation Presentation'
+2) Executive Summary with key insights from the conversation (financial goals, risk profile, horizon, capacity, sentiment)
+3) Personalized Recommendations (integrate and polish the provided recommendation)
+4) Why These Recommendations? (aligned with goals, risk appropriate, diversification, tax-efficient)
+5) Next Steps (immediate actions and ongoing partnership)
+6) Investment Process & Timeline (Week 1-2, Week 3-4, Month 2, Quarterly)
+7) Compliance & Disclosures
+8) Contact Information (Client name and location, Email, Phone, Next Meeting, Portfolio Platform)
+
+Ensure the tone is professional and specific to the client based on the transcript. Output must be valid Markdown.`;
+
+        const params = {
+            messages: [
+                { role: 'system', content: system_content },
+                { role: 'user', content: user_content }
+            ],
+            max_tokens: 1500,
+            temperature: 0.3,
+            top_p: 0.9,
+            frequency_penalty: 0,
+            presence_penalty: 0
+        };
+
+        const response = await axios.post(url, params, { headers });
+        const content = response?.data?.choices?.[0]?.message?.content;
+
+        if (!content) {
+            return res.status(502).send({
+                message: { content: 'Error generating pitch: Unexpected response format' }
+            });
+        }
+
+        return res.send({ message: { content } });
+    } catch (error) {
+        console.error('Error generating client pitch:', error.message || error);
+        if (error.response) {
+            return res.status(error.response.status).send({
+                message: {
+                    content: `Error generating pitch: ${error.response.data?.error?.message || 'API Error'}`,
+                    error_type: 'api_error'
+                }
+            });
+        } else if (error.request) {
+            return res.status(503).send({
+                message: {
+                    content: 'Error generating pitch: Network connection issue',
+                    error_type: 'network_error'
+                }
+            });
+        } else {
+            return res.status(500).send({
+                message: {
+                    content: 'Error generating pitch: Service configuration issue',
+                    error_type: 'config_error'
+                }
+            });
+        }
+    }
 });
 
 module.exports = router;

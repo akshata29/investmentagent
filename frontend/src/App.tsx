@@ -519,16 +519,46 @@ interface AppState {
     }
   }
 
+  // Extract basic client info (name, email, phone, location) from conversation
+  extractClientInfo(text: string): { name?: string; email?: string; phone?: string; location?: string } {
+    const t = text || '';
+    // Name patterns
+    const namePatterns = [
+      /\bmy name is\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b/,
+      /\bthis is\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b/,
+      /\bi am\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b/,
+      /\bI'm\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b/,
+    ];
+    let name: string | undefined;
+    for (const re of namePatterns) {
+      const m = t.match(re);
+      if (m && m[1]) { name = m[1].trim(); break; }
+    }
+    // Email & phone
+    const emailMatch = t.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+    const phoneMatch = t.match(/(?:\+?\d{1,2}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?){2}\d{4}\b/);
+    // Location (very naive)
+    const locMatch = t.match(/\b(?:from|in)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b/);
+    return {
+      name,
+      email: emailMatch?.[0],
+      phone: phoneMatch?.[0],
+      location: locMatch?.[1]
+    };
+  }
+
   async gptCustomPromptCompetion(){
     var customPromptText = (document.getElementById("customPromptTextarea") as HTMLTextAreaElement).value;
     var transcriptInputForPmt = this.state.displayText;
     const gptObj = await getGPTCustomPromptCompletion(transcriptInputForPmt, customPromptText);
-    const gptText = gptObj.data.text;
-    try{
-        this.setState({ gptInsightsOutput: gptText.replace("\n\n", "") });
-    }catch(error){
-        this.setState({ gptInsightsOutput: gptObj.data });
-    }
+  // Support both legacy completions (.text) and chat completions (.message.content)
+  const content = gptObj?.data?.message?.content ?? gptObj?.data?.text ?? gptObj?.data;
+  try{
+    const text = typeof content === 'string' ? content : JSON.stringify(content);
+    this.setState({ gptInsightsOutput: text.replace("\n\n", "") });
+  }catch(error){
+    this.setState({ gptInsightsOutput: String(content) });
+  }
   }
 
   async gptLiveGuidance(){
@@ -712,14 +742,78 @@ interface AppState {
     this.setState({displayText: transcritionText})
   }
 
-  onClearAllTextarea = () => {
-    this.setState({displayText: ''});
-    this.setState({displayNLPOutput: ''});
-    this.setState({displayKeyPhrases: ''});
-    this.setState({displayPiiText: ''});
-    this.setState({gptInsightsOutput: ''});    
-    (document.getElementById("customPromptTextarea") as HTMLTextAreaElement).value= '';
-    (document.getElementById("transcriptTextarea") as HTMLTextAreaElement).value= '';
+  onClearAllData = () => {
+    // Reset all text and data state to initial values
+    this.setState({
+      displayText: 'Speak to your microphone or copy/paste conversation transcript here',
+      displayNLPOutput: '',
+      displayKeyPhrases: '',
+      displayPiiText: '',
+      gptInsightsOutput: '',
+      agentGuidance: '',
+      taskCompleted: '',
+      gptvInsights: '',
+      recommendation: 'Click "Generate Recommendations" to analyze the conversation and get personalized Fisher Investments recommendations.',
+      isGeneratingRecommendation: false,
+      transcriptEventCount: 0,
+      caseNumber: Date.now(),
+      selectedImage: '',
+      imageList: [],
+      // Reset sentiment data to neutral initial state
+      sentimentData: {
+        current: {
+          overall: {
+            sentiment: 'neutral',
+            score: 0.5,
+            confidenceScores: {
+              positive: 0.33,
+              negative: 0.33,
+              neutral: 0.34
+            }
+          },
+          sentences: []
+        },
+        rolling: {
+          overall: {
+            sentiment: 'neutral',
+            score: 0.5,
+            confidenceScores: {
+              positive: 0.33,
+              negative: 0.33,
+              neutral: 0.34
+            }
+          },
+          allSentences: []
+        }
+      },
+      // Reset notification system
+      newRecommendationCount: 0,
+      lastRecommendationTime: null,
+      showRecommendationAlert: false,
+      recommendationHistory: [],
+      // Reset processing states
+      isProcessing: false
+    });
+    
+    // Clear textarea elements in the DOM
+    const customPromptTextarea = document.getElementById("customPromptTextarea") as HTMLTextAreaElement;
+    if (customPromptTextarea) customPromptTextarea.value = '';
+    
+    const transcriptTextarea = document.getElementById("transcriptTextarea") as HTMLTextAreaElement;
+    if (transcriptTextarea) transcriptTextarea.value = '';
+    
+    // Also clear any other textarea/input elements that might contain user data
+    const elements = document.querySelectorAll('textarea, input[type="text"]');
+    elements.forEach((element) => {
+      const htmlElement = element as HTMLInputElement | HTMLTextAreaElement;
+      // Only clear if it's not a settings or configuration field
+      if (htmlElement.id !== 'customPromptTextarea' && 
+          htmlElement.id !== 'transcriptTextarea' &&
+          !htmlElement.className.includes('settings') &&
+          !htmlElement.className.includes('config')) {
+        if (htmlElement.value) htmlElement.value = '';
+      }
+    });
   }
 
   render() {   
@@ -825,8 +919,8 @@ interface AppState {
                   
                   <ModernIconButton
                     icon={<Delete24Regular />}
-                    onClick={this.onClearAllTextarea}
-                    title="Clear all text areas"
+                    onClick={this.onClearAllData}
+                    title="Clear all data and reset application state"
                     variant="secondary"
                   />
 
@@ -1128,7 +1222,7 @@ interface AppState {
               recommendation={this.state.recommendation}
               conversationText={this.state.displayText}
               sentimentData={this.state.sentimentData}
-              clientName="Sarah Johnson"
+              clientName={this.extractClientInfo(this.state.displayText).name || 'Client'}
               onScheduleMeeting={() => console.log('Scheduling meeting...')}
               onSendEmail={() => console.log('Sending email preview...')}
               onCreatePitch={() => console.log('Creating client pitch...')}

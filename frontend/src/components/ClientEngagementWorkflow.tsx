@@ -17,6 +17,9 @@ import {
   StarAdd24Regular,
   TaskListLtr24Regular
 } from '@fluentui/react-icons';
+import { generateClientPitch as buildPitchFromUtils } from '../utils/client_pitch';
+import { generateClientPitchAPI } from '../api/backend_api_orchestrator';
+import { markdownToHtml, exportHtmlToPdf } from '../utils/markdown';
 
 interface ClientWorkflowProps {
   recommendation: string;
@@ -55,135 +58,37 @@ export const ClientEngagementWorkflow: React.FC<ClientWorkflowProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [generatedPitch, setGeneratedPitch] = useState<string>('');
   const [showPitchModal, setShowPitchModal] = useState(false);
+  const [isGeneratingPitch, setIsGeneratingPitch] = useState(false);
 
   const markStepCompleted = (stepId: string) => {
     setCompletedSteps(prev => new Set([...prev, stepId]));
     setActiveStep('');
   };
 
+  // Simple client detail extraction from transcript (fallback heuristics)
+  const extractClientDetails = (text: string) => {
+    const t = text || '';
+    const email = t.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0];
+    const phone = t.match(/(?:\+?\d{1,2}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?){2}\d{4}\b/)?.[0];
+    const location = t.match(/\b(?:from|in)\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b/)?.[1];
+    return { email, phone, location };
+  };
+
   // Generate real client pitch based on conversation and recommendations
-  const generateClientPitch = (): string => {
-    const currentDate = new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-
-    // Extract key insights from conversation
-    const conversationLower = conversationText?.toLowerCase() || '';
-    const financialGoals = [];
-    const riskProfile = [];
-    const timeframe = [];
-    
-    // Analyze conversation for key points
-    if (conversationLower.includes('retirement')) financialGoals.push('Retirement Planning');
-    if (conversationLower.includes('college') || conversationLower.includes('education')) financialGoals.push('Education Funding');
-    if (conversationLower.includes('house') || conversationLower.includes('home')) financialGoals.push('Home Purchase');
-    if (conversationLower.includes('emergency')) financialGoals.push('Emergency Fund');
-    
-    if (conversationLower.includes('conservative') || conversationLower.includes('safe')) riskProfile.push('Conservative approach preferred');
-    if (conversationLower.includes('aggressive') || conversationLower.includes('growth')) riskProfile.push('Growth-oriented strategy');
-    if (conversationLower.includes('diversify')) riskProfile.push('Diversification focused');
-    
-    if (conversationLower.includes('short term') || conversationLower.includes('soon')) timeframe.push('Short-term objectives');
-    if (conversationLower.includes('long term') || conversationLower.includes('years')) timeframe.push('Long-term planning');
-    
-    // Extract investment amounts mentioned
-    const amounts = conversationText?.match(/\$[\d,]+|[\d,]+\s*(?:million|thousand|k|m)\b/gi) || [];
-    const investmentAmount = amounts.length > 0 ? amounts[0] : 'To be determined';
-    
-    // Get sentiment
-    const clientSentiment = sentimentData?.rolling?.overall?.sentiment || 'neutral';
-    const sentimentNote = clientSentiment === 'positive' ? 'Client expressed enthusiasm about investment opportunities' :
-                          clientSentiment === 'negative' ? 'Client has concerns that need to be addressed' :
-                          'Client is taking a measured approach to investment decisions';
-
-    return `
-# Investment Recommendation Presentation
-**Prepared for:** ${clientName}  
-**Date:** ${currentDate}  
-**Advisor:** AI Investment Copilot  
-
----
-
-## Executive Summary
-
-Based on our detailed conversation and comprehensive analysis, I'm pleased to present personalized investment recommendations tailored to your specific needs and objectives.
-
-**Key Insights from Our Discussion:**
-${financialGoals.length > 0 ? `• **Financial Goals:** ${financialGoals.join(', ')}` : '• **Financial Goals:** Wealth building and financial security'}
-${riskProfile.length > 0 ? `• **Risk Profile:** ${riskProfile.join(', ')}` : '• **Risk Profile:** Balanced approach to risk and returns'}
-${timeframe.length > 0 ? `• **Investment Horizon:** ${timeframe.join(', ')}` : '• **Investment Horizon:** Medium to long-term focus'}
-• **Investment Capacity:** ${investmentAmount}
-• **Client Outlook:** ${sentimentNote}
-
----
-
-## Personalized Recommendations
-
-${recommendation.replace(/\n/g, '\n')}
-
----
-
-## Why These Recommendations?
-
-**✓ Aligned with Your Goals**  
-Each recommendation directly addresses the objectives you've shared during our conversation.
-
-**✓ Risk-Appropriate**  
-Investment selections match your expressed comfort level and risk tolerance.
-
-**✓ Diversified Approach**  
-Balanced portfolio construction to minimize risk while maximizing opportunity.
-
-**✓ Tax-Efficient**  
-Structured to optimize your after-tax returns where applicable.
-
----
-
-## Next Steps
-
-**Immediate Actions (Next 7 Days):**
-1. Review these recommendations thoroughly
-2. Schedule follow-up meeting to discuss any questions
-3. Complete necessary account documentation
-4. Begin initial investment allocation
-
-**Ongoing Partnership:**
-• Quarterly portfolio reviews
-• Annual strategy assessments  
-• Continuous monitoring of market conditions
-• Regular communication and updates
-
----
-
-## Investment Process & Timeline
-
-**Week 1-2:** Account setup and initial funding  
-**Week 3-4:** Investment implementation and allocation  
-**Month 2:** First portfolio review and adjustment if needed  
-**Quarterly:** Ongoing performance review and rebalancing  
-
----
-
-## Compliance & Disclosures
-
-*This recommendation is based on information provided during our conversation and current market conditions. Past performance does not guarantee future results. All investments carry risk, including potential loss of principal. Please review all investment materials carefully and consult with your tax advisor as appropriate.*
-
----
-
-## Contact Information
-
-**Questions?** I'm here to help every step of the way.  
-**Next Meeting:** [To be scheduled]  
-**Portfolio Platform:** [Access details to be provided]  
-
-*Thank you for trusting us with your financial future. I look forward to helping you achieve your investment goals.*
-
----
-
-**Generated on ${currentDate} using AI Investment Copilot v2.0**
-`;
+  const generateClientPitch = async (): Promise<string> => {
+    try {
+      setIsGeneratingPitch(true);
+      const apiRes = await generateClientPitchAPI(conversationText || '', recommendation || '', sentimentData);
+      const apiPitch = apiRes?.data?.message?.content;
+      if (apiPitch && typeof apiPitch === 'string' && apiPitch.trim().length > 0) {
+        return apiPitch;
+      }
+    } catch (e) {
+      console.error('Backend pitch generation failed, falling back to local:', e);
+    } finally {
+      setIsGeneratingPitch(false);
+    }
+    return buildPitchFromUtils({ conversationText, recommendation, sentimentData, clientName });
   };
 
   const getWorkflowSteps = (): WorkflowStep[] => [
@@ -208,8 +113,8 @@ Structured to optimize your after-tax returns where applicable.
       icon: <PersonFeedback24Regular />,
       status: 'pending',
       estimatedTime: '10 min',
-      action: () => {
-        const pitch = generateClientPitch();
+      action: async () => {
+        const pitch = await generateClientPitch();
         setGeneratedPitch(pitch);
         setShowPitchModal(true);
         if (onCreatePitch) onCreatePitch();
@@ -712,14 +617,15 @@ Structured to optimize your after-tax returns where applicable.
                     </span>
                   </div>
                   
-                  {status === 'pending' && canExecute && (
+          {status === 'pending' && canExecute && (
                     <ModernButton
                       variant="primary"
                       size="small"
-                      onClick={step.action}
+            onClick={step.action}
+            loading={step.id === 'prepare-pitch' && isGeneratingPitch}
                       icon={<ArrowRight24Regular />}
                     >
-                      Start Step
+            {step.id === 'prepare-pitch' && isGeneratingPitch ? 'Preparing Pitch...' : 'Start Step'}
                     </ModernButton>
                   )}
                   
@@ -763,7 +669,18 @@ Structured to optimize your after-tax returns where applicable.
                   }}
                   icon={<DocumentPdf24Regular />}
                 >
-                  Export
+                  Export Markdown
+                </ModernButton>
+                <ModernButton
+                  variant="secondary"
+                  size="small"
+                  onClick={() => {
+                    const html = markdownToHtml(generatedPitch);
+                    exportHtmlToPdf(html, `Investment Pitch - ${clientName}`);
+                  }}
+                  icon={<DocumentPdf24Regular />}
+                >
+                  Export PDF
                 </ModernButton>
                 <ModernButton
                   variant="secondary"

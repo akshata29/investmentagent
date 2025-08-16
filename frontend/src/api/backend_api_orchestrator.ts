@@ -264,6 +264,24 @@ export async function generateMarketInsights(transcriptText: string): Promise<an
   }
 }
 
+export async function generateClientPitchAPI(transcriptText: string, recommendationText: string, sentimentData?: any): Promise<any> {
+  try {
+    const data = { transcript: transcriptText, recommendation: recommendationText, sentimentData };
+    const headers = { 'Content-Type': 'application/json' };
+    const res = await axios.post('/openai/gpt/pitch', data, { headers });
+    return res;
+  } catch (err: any) {
+    console.error('API Error in generateClientPitchAPI:', err);
+    return {
+      data: {
+        message: {
+          content: ''
+        }
+      }
+    };
+  }
+}
+
 
 
   

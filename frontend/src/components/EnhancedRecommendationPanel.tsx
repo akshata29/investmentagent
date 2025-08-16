@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Text, Spinner, SpinnerSize, SearchBox, Dropdown, IDropdownOption } from '@fluentui/react';
 import { ModernSection, ModernTextArea } from './ModernSection';
 import { ModernButton } from './ModernButton';
-import { getGPTCustomPromptCompletion } from '../api/backend_api_orchestrator';
+import { getGPTCustomPromptCompletion, generateClientPitchAPI } from '../api/backend_api_orchestrator';
 import { 
   Target24Regular, 
   Money24Regular, 
@@ -13,12 +13,15 @@ import {
   Print24Regular,
   Calendar24Regular,
   PersonFeedback24Regular,
+  DocumentPdf24Regular,
   Filter24Regular,
   ChartMultiple24Regular,
   People24Regular,
   Shield24Regular,
   Alert24Regular
 } from '@fluentui/react-icons';
+import { generateClientPitch as buildPitchFromUtils } from '../utils/client_pitch';
+import { markdownToHtml, exportHtmlToPdf } from '../utils/markdown';
 
 interface RecommendationPanelProps {
   recommendation: string;
@@ -52,6 +55,9 @@ export const EnhancedRecommendationPanel: React.FC<RecommendationPanelProps> = (
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [insights, setInsights] = useState<RecommendationInsight[]>([]);
   const [isAnalyzingInsights, setIsAnalyzingInsights] = useState(false);
+  const [generatedPitch, setGeneratedPitch] = useState<string>('');
+  const [showPitchModal, setShowPitchModal] = useState(false);
+  const [isGeneratingPitch, setIsGeneratingPitch] = useState(false);
 
   const isWaitingForInfo = recommendation.includes('***Waiting for More Client Information***');
   const hasError = recommendation.includes('Error generating recommendation');
@@ -154,10 +160,21 @@ Return only the JSON object, no other text.`;
       
       if (result && result.data) {
         const content = result.data.message?.content || result.data.content || result.data;
-        
+
         try {
+          // Sanitize code fences and extract JSON block safely
+          let jsonText = typeof content === 'string' ? content : JSON.stringify(content);
+          // Remove ```json ... ``` wrappers if present
+          jsonText = jsonText.replace(/```json\s*/gi, '').replace(/```/g, '').trim();
+          // Extract the innermost JSON braces if extra text remains
+          const firstBrace = jsonText.indexOf('{');
+          const lastBrace = jsonText.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && (firstBrace !== 0 || lastBrace !== jsonText.length - 1)) {
+            jsonText = jsonText.slice(firstBrace, lastBrace + 1);
+          }
+
           // Parse the AI response
-          const analysisData = JSON.parse(content);
+          const analysisData = JSON.parse(jsonText);
           
           // Convert to our insights format
           const aiInsights: RecommendationInsight[] = [
@@ -339,6 +356,40 @@ Return only the JSON object, no other text.`;
       `);
       printWindow.document.close();
       printWindow.print();
+    }
+  };
+
+  const handlePrepareClientPitch = async () => {
+    try {
+      setIsGeneratingPitch(true);
+      // Try backend LLM-generated pitch first
+      const apiRes = await generateClientPitchAPI(conversationTranscript || '', recommendation || '', sentimentData);
+      const apiPitch = apiRes?.data?.message?.content;
+      if (apiPitch && typeof apiPitch === 'string' && apiPitch.trim().length > 0) {
+        setGeneratedPitch(apiPitch);
+      } else {
+        // Fallback to local utility
+        const localPitch = buildPitchFromUtils({
+          conversationText: conversationTranscript || '',
+          recommendation: recommendation || '',
+          sentimentData,
+          clientName: undefined
+        });
+        setGeneratedPitch(localPitch);
+      }
+      setShowPitchModal(true);
+    } catch (e) {
+      console.error('Failed to build client pitch:', e);
+      const localPitch = buildPitchFromUtils({
+        conversationText: conversationTranscript || '',
+        recommendation: recommendation || '',
+        sentimentData,
+        clientName: undefined
+      });
+      setGeneratedPitch(localPitch);
+      setShowPitchModal(true);
+    } finally {
+      setIsGeneratingPitch(false);
     }
   };
 
@@ -733,12 +784,163 @@ Return only the JSON object, no other text.`;
               variant="primary"
               size="small"
               icon={<PersonFeedback24Regular />}
+              onClick={handlePrepareClientPitch}
+              loading={isGeneratingPitch}
             >
-              Prepare Client Pitch
+              {isGeneratingPitch ? 'Preparing Pitch...' : 'Prepare Client Pitch'}
             </ModernButton>
           </div>
         </div>
       )}
+
+      {/* Pitch Modal (matches style from ClientEngagementWorkflow) */}
+      {showPitchModal && (
+        <div className="pitch-modal-overlay" onClick={() => setShowPitchModal(false)}>
+          <div className="pitch-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="pitch-modal-header">
+              <h3>Generated Client Pitch</h3>
+              <div className="pitch-modal-actions">
+                <ModernButton
+                  variant="secondary"
+                  size="small"
+                  onClick={() => {
+                    const blob = new Blob([generatedPitch], { type: 'text/markdown' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `investment-pitch-${new Date().toISOString().split('T')[0]}.md`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  icon={<DocumentPdf24Regular />}
+                >
+                  Export Markdown
+                </ModernButton>
+                <ModernButton
+                  variant="secondary"
+                  size="small"
+                  onClick={() => {
+                    const html = markdownToHtml(generatedPitch);
+                    exportHtmlToPdf(html, 'Investment Pitch');
+                  }}
+                  icon={<DocumentPdf24Regular />}
+                >
+                  Export PDF
+                </ModernButton>
+                <ModernButton
+                  variant="secondary"
+                  size="small"
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedPitch);
+                  }}
+                  icon={<Share24Regular />}
+                >
+                  Copy
+                </ModernButton>
+                <button 
+                  className="close-modal-btn"
+                  onClick={() => setShowPitchModal(false)}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            <div className="pitch-modal-content">
+              <pre className="pitch-content">{generatedPitch}</pre>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .pitch-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: var(--spacing-lg);
+        }
+
+        .pitch-modal {
+          background: var(--bg-primary);
+          border-radius: var(--radius-lg);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          max-width: 900px;
+          max-height: 80vh;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          border: 2px solid var(--accent-blue);
+        }
+
+        .pitch-modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: var(--spacing-lg);
+          border-bottom: 2px solid var(--border-primary);
+          background: var(--bg-secondary);
+        }
+
+        .pitch-modal-header h3 {
+          margin: 0;
+          color: var(--text-primary);
+          font-size: var(--font-size-lg);
+          font-weight: 600;
+        }
+
+        .pitch-modal-actions {
+          display: flex;
+          gap: var(--spacing-sm);
+          align-items: center;
+        }
+
+        .close-modal-btn {
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: var(--text-secondary);
+          padding: 4px;
+          margin-left: var(--spacing-sm);
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .close-modal-btn:hover {
+          background: var(--bg-tertiary);
+          color: var(--text-primary);
+        }
+
+        .pitch-modal-content {
+          flex: 1;
+          overflow-y: auto;
+          padding: var(--spacing-lg);
+        }
+
+        .pitch-content {
+          white-space: pre-wrap;
+          font-family: 'Segoe UI', system-ui, sans-serif;
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--text-primary);
+          margin: 0;
+          background: var(--bg-secondary);
+          padding: var(--spacing-lg);
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-primary);
+        }
+      `}</style>
     </div>
   );
 };

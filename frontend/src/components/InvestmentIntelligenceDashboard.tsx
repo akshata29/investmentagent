@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Text, SearchBox, Dropdown, IDropdownOption, Spinner, SpinnerSize } from '@fluentui/react';
-import { ModernButton } from './ModernButton';
+import { Text, SearchBox, Dropdown, IDropdownOption, Spinner, SpinnerSize, Toggle } from '@fluentui/react';
+import { ModernButton, ModernIconButton } from './ModernButton';
 import { generateRecommendation, generateMarketInsights } from '../api/backend_api_orchestrator';
 import { 
   DataTrending24Regular,
@@ -16,7 +16,32 @@ import {
   PersonFeedback24Regular,
   Calculator24Regular,
   Shield24Regular,
-  Alert24Regular
+  Alert24Regular,
+  // Button icons
+  AlertOn24Regular,
+  Lightbulb24Regular,
+  // Client category icons
+  Building24Regular,
+  Home24Regular,
+  Star24Regular,
+  Diamond24Regular,
+  Briefcase24Regular,
+  Heart24Regular,
+  TreeEvergreenRegular,
+  HatGraduation24Regular,
+  // Impact and timeframe icons
+  Important24Filled,
+  Important24Regular,
+  Circle24Regular,
+  Flash24Regular,
+  Timer324Regular,
+  Calendar24Regular,
+  CalendarLtr24Regular,
+  // Category enhancement icons
+  ChartMultiple24Regular,
+  DataPie24Regular,
+  ArrowTrendingLines24Regular,
+  Info24Regular
 } from '@fluentui/react-icons';
 
 interface ClientMetric {
@@ -92,6 +117,7 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
   const [aiInsights, setAiInsights] = useState<MarketInsight[]>([]);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [insightsError, setInsightsError] = useState<string>('');
+  const [ultraCompact, setUltraCompact] = useState<boolean>(false);
 
   const timeframeOptions: IDropdownOption[] = [
     { key: 'today', text: 'Today' },
@@ -246,47 +272,142 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
           ];
         }
         
-        // Parse bullet points into insights
-        const bulletPoints = result.split('•').filter(point => point.trim().length > 0);
+        // Parse bullet points into insights - handle both • and - formats
+        let bulletPoints: string[];
+        
+        console.log('Parsing AI response for bullet points. Content length:', result.length);
+        
+        // First try to split by bullet points with asterisks (- **)
+        if (result.includes('- **')) {
+          console.log('Found markdown bullet points (- **)');
+          bulletPoints = result.split(/- \*\*/).filter(point => point.trim().length > 0);
+          // Remove the introductory text before the first bullet point
+          if (bulletPoints.length > 0 && !bulletPoints[0].includes(':')) {
+            console.log('Removing introductory text');
+            bulletPoints = bulletPoints.slice(1);
+          }
+        } else if (result.includes('•')) {
+          console.log('Found bullet character (•)');
+          // Fallback to bullet character
+          bulletPoints = result.split('•').filter(point => point.trim().length > 0);
+        } else {
+          console.log('Using dash splitting as fallback');
+          // Try splitting by dash at start of line
+          bulletPoints = result.split(/\n-\s+/).filter(point => point.trim().length > 0);
+          if (bulletPoints.length <= 1) {
+            // Try simple dash splitting
+            bulletPoints = result.split('-').filter(point => point.trim().length > 20);
+          }
+        }
+        
+        console.log('Found bullet points:', bulletPoints.length);
+        
         const insights: MarketInsight[] = [];
         
         bulletPoints.forEach((point, index) => {
           const trimmedPoint = point.trim();
+          console.log(`Processing bullet point ${index + 1}:`, trimmedPoint.substring(0, 100) + '...');
+          
           if (trimmedPoint.length > 20) { // Only process substantial bullet points
             // Extract title and description
-            const lines = trimmedPoint.split('\n').filter(line => line.trim().length > 0);
-            const title = lines[0].trim().replace(/^\**|\**$/g, ''); // Remove bold markdown
-            const description = lines.length > 1 ? lines.slice(1).join(' ').trim() : title;
+            let title = '';
+            let description = '';
+            
+            // Handle markdown bold titles (**: text**)
+            const boldMatch = trimmedPoint.match(/^([^*]+)\*\*:\s*(.*)/s);
+            if (boldMatch) {
+              title = boldMatch[1].trim();
+              description = boldMatch[2].trim();
+              console.log('Extracted via bold match:', { title, description: description.substring(0, 50) + '...' });
+            } else {
+              // Fallback: split by first colon or period
+              const colonMatch = trimmedPoint.match(/^([^.:]+)[.:](.*)$/s);
+              if (colonMatch) {
+                title = colonMatch[1].trim();
+                description = colonMatch[2].trim();
+                console.log('Extracted via colon match:', { title, description: description.substring(0, 50) + '...' });
+              } else {
+                // Use first line as title, rest as description
+                const lines = trimmedPoint.split('\n').filter(line => line.trim().length > 0);
+                title = lines[0].trim().replace(/^\**|\**$/g, ''); // Remove bold markdown
+                description = lines.length > 1 ? lines.slice(1).join(' ').trim() : title;
+                console.log('Extracted via line split:', { title, description: description.substring(0, 50) + '...' });
+              }
+            }
+            
+            // Clean up the title and description
+            title = title.replace(/^\**|\**$/g, '').trim();
+            description = description.replace(/^\**|\**$/g, '').trim();
             
             // Determine category based on content
             let category: 'market' | 'sector' | 'opportunity' | 'risk' = 'market';
             let impact: 'high' | 'medium' | 'low' = 'medium';
             let timeframe: 'immediate' | 'short' | 'medium' | 'long' = 'medium';
+            let relevantClients: string[] = ['Active Clients'];
             
-            if (title.toLowerCase().includes('risk') || description.toLowerCase().includes('risk')) {
+            const titleLower = title.toLowerCase();
+            const descLower = description.toLowerCase();
+            
+            // More sophisticated categorization
+            if (titleLower.includes('risk') || descLower.includes('risk') || descLower.includes('volatility')) {
               category = 'risk';
               impact = 'high';
               timeframe = 'immediate';
-            } else if (title.toLowerCase().includes('opportunity') || description.toLowerCase().includes('opportunity')) {
+              relevantClients = ['Risk-Conscious', 'Conservative Investors'];
+            } else if (titleLower.includes('opportunity') || titleLower.includes('growth') || descLower.includes('opportunity')) {
               category = 'opportunity';
               impact = 'medium';
               timeframe = 'medium';
-            } else if (title.toLowerCase().includes('sector') || description.toLowerCase().includes('sector')) {
+              relevantClients = ['Growth Investors', 'Active Traders'];
+            } else if (titleLower.includes('sector') || titleLower.includes('dividend') || titleLower.includes('esg') || 
+                      titleLower.includes('fixed') || descLower.includes('sector')) {
               category = 'sector';
               impact = 'medium';
               timeframe = 'long';
+              relevantClients = ['Sector Focused', 'Income Investors'];
+            } else if (titleLower.includes('tax') || titleLower.includes('estate') || titleLower.includes('planning')) {
+              category = 'opportunity';
+              impact = 'high';
+              timeframe = 'long';
+              relevantClients = ['High Net Worth', 'Estate Planning'];
             }
             
-            insights.push({
-              id: `insight-${index + 1}`,
+            // Determine impact based on keywords
+            if (descLower.includes('critical') || descLower.includes('important') || descLower.includes('significant')) {
+              impact = 'high';
+            } else if (descLower.includes('moderate') || descLower.includes('steady')) {
+              impact = 'medium';
+            }
+            
+            // Determine timeframe based on keywords
+            if (descLower.includes('immediate') || descLower.includes('now') || descLower.includes('current')) {
+              timeframe = 'immediate';
+            } else if (descLower.includes('short') || descLower.includes('near term')) {
+              timeframe = 'short';
+            } else if (descLower.includes('long') || descLower.includes('retirement') || descLower.includes('estate')) {
+              timeframe = 'long';
+            }
+            
+            const finalInsight = {
+              id: `ai-insight-${index + 1}`,
               category,
-              title: title.substring(0, 100), // Limit title length
-              description: description.substring(0, 200), // Limit description length
+              title: title.length > 60 ? title.substring(0, 60) + '...' : title,
+              description: description.length > 200 ? description.substring(0, 200) + '...' : description,
               impact,
               timeframe,
-              confidence: Math.floor(Math.random() * 20) + 75, // 75-95% confidence range
-              relevantClients: ['Active Clients']
+              confidence: Math.floor(Math.random() * 15) + 80, // 80-95% confidence range
+              relevantClients
+            };
+            
+            console.log(`Created insight ${index + 1}:`, {
+              title: finalInsight.title,
+              category: finalInsight.category,
+              impact: finalInsight.impact,
+              timeframe: finalInsight.timeframe,
+              confidence: finalInsight.confidence
             });
+            
+            insights.push(finalInsight);
           }
         });
         
@@ -444,6 +565,116 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
     }
   };
 
+  // New icon helper functions for enhanced visual appeal
+  const getClientCategoryIcon = (clientType: string) => {
+    const type = clientType.toLowerCase();
+    if (type.includes('conservative') || type.includes('risk-conscious')) {
+      return <Shield24Regular style={{ color: 'var(--accent-blue)', fontSize: '14px' }} />;
+    } else if (type.includes('growth') || type.includes('active')) {
+      return <ArrowTrendingLines24Regular style={{ color: 'var(--accent-green)', fontSize: '14px' }} />;
+    } else if (type.includes('income') || type.includes('dividend')) {
+      return <Money24Regular style={{ color: 'var(--accent-purple)', fontSize: '14px' }} />;
+    } else if (type.includes('high net worth') || type.includes('estate')) {
+      return <Diamond24Regular style={{ color: 'var(--accent-orange)', fontSize: '14px' }} />;
+    } else if (type.includes('retirement') || type.includes('pre-retirement')) {
+      return <HatGraduation24Regular style={{ color: 'var(--accent-red)', fontSize: '14px' }} />;
+    } else if (type.includes('sector') || type.includes('focused')) {
+      return <ChartMultiple24Regular style={{ color: 'var(--accent-blue)', fontSize: '14px' }} />;
+    } else if (type.includes('sustainable') || type.includes('esg')) {
+      return <TreeEvergreenRegular style={{ color: 'var(--accent-green)', fontSize: '14px' }} />;
+    } else if (type.includes('tech') || type.includes('innovation')) {
+      return <Lightbulb24Regular style={{ color: 'var(--accent-purple)', fontSize: '14px' }} />;
+    } else if (type.includes('planning')) {
+      return <Calendar24Regular style={{ color: 'var(--accent-orange)', fontSize: '14px' }} />;
+    } else {
+      return <People24Regular style={{ color: 'var(--text-secondary)', fontSize: '14px' }} />;
+    }
+  };
+
+  // Normalize client labels to a canonical key for icon grouping (dedup)
+  const getClientIconKey = (clientType: string): string => {
+    const t = (clientType || '').toLowerCase();
+    if (t.includes('conservative') || t.includes('risk-conscious') || t.includes('risk averse')) return 'conservative';
+    if (t.includes('growth') || t.includes('active') || t.includes('growth oriented')) return 'growth';
+    if (t.includes('income') || t.includes('dividend')) return 'income';
+    if (t.includes('high net worth') || t.includes('hnw') || t.includes('estate')) return 'hni';
+    if (t.includes('retirement') || t.includes('pre-retirement')) return 'retirement';
+    if (t.includes('sector') || t.includes('focused')) return 'sector';
+    if (t.includes('sustainable') || t.includes('esg') || t.includes('values')) return 'sustainable';
+    if (t.includes('tech') || t.includes('innovation')) return 'tech';
+    if (t.includes('planning') || t.includes('tax')) return 'planning';
+    return 'general';
+  };
+
+  const getImpactIcon = (impact: string) => {
+    switch (impact) {
+      case 'high': return <Important24Filled style={{ color: 'white', fontSize: '12px' }} />;
+      case 'medium': return <Important24Regular style={{ color: 'white', fontSize: '12px' }} />;
+      case 'low': return <Circle24Regular style={{ color: 'white', fontSize: '12px' }} />;
+      default: return <Circle24Regular style={{ color: 'white', fontSize: '12px' }} />;
+    }
+  };
+
+  const getTimeframeIcon = (timeframe: string) => {
+    switch (timeframe) {
+      case 'immediate': return <Flash24Regular style={{ color: 'var(--text-secondary)', fontSize: '12px' }} />;
+      case 'short': return <Timer324Regular style={{ color: 'var(--text-secondary)', fontSize: '12px' }} />;
+      case 'medium': return <Calendar24Regular style={{ color: 'var(--text-secondary)', fontSize: '12px' }} />;
+      case 'long': return <CalendarLtr24Regular style={{ color: 'var(--text-secondary)', fontSize: '12px' }} />;
+      default: return <Clock24Regular style={{ color: 'var(--text-secondary)', fontSize: '12px' }} />;
+    }
+  };
+
+  // Enhanced client category styling based on type
+  const getClientCategoryStyle = (clientType: string) => {
+    const type = clientType.toLowerCase();
+    if (type.includes('conservative') || type.includes('risk-conscious')) {
+      return { backgroundColor: 'var(--accent-blue)', color: 'white' };
+    } else if (type.includes('growth') || type.includes('active')) {
+      return { backgroundColor: 'var(--accent-green)', color: 'white' };
+    } else if (type.includes('income') || type.includes('dividend')) {
+      return { backgroundColor: 'var(--accent-purple)', color: 'white' };
+    } else if (type.includes('high net worth') || type.includes('estate')) {
+      return { backgroundColor: 'var(--accent-orange)', color: 'white' };
+    } else if (type.includes('retirement') || type.includes('pre-retirement')) {
+      return { backgroundColor: 'var(--accent-red)', color: 'white' };
+    } else if (type.includes('sustainable') || type.includes('esg')) {
+      return { backgroundColor: 'var(--accent-green)', color: 'white' };
+    } else {
+      return { backgroundColor: 'var(--accent-blue)', color: 'white' };
+    }
+  };
+
+  // Tooltip rationale for why a client segment is relevant to an insight
+  const getClientRationale = (clientType: string): string => {
+    const t = clientType.toLowerCase();
+    if (t.includes('risk') || t.includes('conservative')) {
+      return 'Lower volatility positioning, capital preservation, and downside protection align with this theme.';
+    }
+    if (t.includes('income') || t.includes('dividend')) {
+      return 'Consistent cash flows and dividend stability benefit from the described market setup.';
+    }
+    if (t.includes('growth') || t.includes('active')) {
+      return 'Alpha opportunities via sector rotation and momentum in the highlighted areas.';
+    }
+    if (t.includes('high net worth')) {
+      return 'Tax optimization, estate planning, and bespoke allocation strategies are especially impactful.';
+    }
+    if (t.includes('estate')) {
+      return 'Coordination with trust/estate strategies can enhance after-tax outcomes.';
+    }
+    if (t.includes('retirement') || t.includes('pre-retirement')) {
+      return 'Sequence-of-returns risk and horizon-aware allocation suggest more resilient mixes.';
+    }
+    if (t.includes('esg') || t.includes('sustainable')) {
+      return 'Values alignment with resilient ESG factors and long-term structural trends.';
+    }
+    if (t.includes('sector')) {
+      return 'Targeted sector exposure can capture the opportunity while controlling risk.';
+    }
+    return 'Relevant audience for this theme based on preferences and constraints.';
+  };
+
   const clientMetrics = getClientMetrics();
   const marketInsights = getMarketInsights();
 
@@ -460,7 +691,7 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
   });
 
   return (
-    <div className="investment-intelligence-dashboard">
+  <div className={`investment-intelligence-dashboard ${ultraCompact ? 'ultra-compact' : ''}`}>
       <style>{`
         .investment-intelligence-dashboard {
           background: var(--bg-secondary);
@@ -505,6 +736,11 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
           align-items: center;
         }
 
+  .view-controls { display: flex; align-items: center; gap: var(--spacing-sm); margin-left: auto; }
+
+  .legend-info { color: var(--text-secondary); display: inline-flex; align-items: center; margin-left: 8px; }
+  .legend-info .tooltip-bubble { left: auto; right: 0; max-width: 460px; }
+
         .search-controls {
           display: flex;
           gap: var(--spacing-sm);
@@ -514,8 +750,8 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
 
         .metrics-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: var(--spacing-md);
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: var(--spacing-sm);
           margin-bottom: var(--spacing-lg);
         }
 
@@ -523,7 +759,7 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
           background: var(--bg-primary);
           border: 1px solid var(--border-primary);
           border-radius: var(--radius-md);
-          padding: var(--spacing-md);
+          padding: calc(var(--spacing-sm) - 2px);
           transition: all 0.3s ease;
           position: relative;
           overflow: hidden;
@@ -558,33 +794,34 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
         .metric-header {
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: var(--spacing-sm);
+          align-items: center;
+          margin-bottom: var(--spacing-xs);
         }
 
         .metric-info {
           flex: 1;
         }
 
-        .metric-label {
+  .metric-label {
           font-size: var(--font-size-sm);
           color: var(--text-secondary);
           margin: 0 0 4px 0;
           font-weight: 500;
         }
 
-        .metric-value {
+  .metric-value {
           font-size: var(--font-size-xl);
           font-weight: 700;
           margin: 0;
           color: var(--text-primary);
+          letter-spacing: 0.2px;
         }
 
         .metric-trend {
           display: flex;
           align-items: center;
           gap: 4px;
-          margin-top: var(--spacing-xs);
+          margin-top: 2px;
         }
 
         .trend-text {
@@ -595,13 +832,13 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
         .insights-section {
           background: var(--bg-primary);
           border-radius: var(--radius-md);
-          padding: var(--spacing-md);
+          padding: var(--spacing-sm);
           border: 1px solid var(--border-primary);
         }
 
         .insights-header {
           display: flex;
-          justify-content: between;
+          justify-content: space-between;
           align-items: center;
           margin-bottom: var(--spacing-md);
           padding-bottom: var(--spacing-sm);
@@ -617,16 +854,37 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
 
         .insights-grid {
           display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
           gap: var(--spacing-md);
+          margin-top: var(--spacing-md);
+          align-items: stretch;
         }
 
         .insight-card {
           background: var(--bg-secondary);
           border: 1px solid var(--border-primary);
           border-radius: var(--radius-md);
-          padding: var(--spacing-md);
+          padding: var(--spacing-sm);
           transition: all 0.3s ease;
           border-left: 4px solid transparent;
+          min-height: 180px;
+          display: flex;
+          flex-direction: column;
+          position: relative;
+  }
+
+        /* Animated accent bar that reflects impact */
+        .insight-card::after {
+          content: '';
+          position: absolute;
+          top: 0; left: 0;
+          height: 3px;
+          width: 0;
+          background: var(--impact-color, transparent);
+          transition: width .3s ease;
+        }
+        .insight-card:hover::after {
+          width: 100%;
         }
 
         .insight-card:hover {
@@ -653,35 +911,74 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
         .insight-header {
           display: flex;
           justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: var(--spacing-sm);
+          align-items: center;
+          margin-bottom: var(--spacing-xs);
+          gap: var(--spacing-xs);
         }
 
         .insight-title-row {
           display: flex;
           align-items: center;
-          gap: var(--spacing-sm);
+          gap: var(--spacing-xs);
           flex: 1;
         }
 
-        .insight-title {
+        .category-avatar {
+          width: 20px; height: 20px; border-radius: 999px;
+          background: var(--bg-primary);
+          border: 2px solid var(--accent-blue);
+          display: inline-flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+
+  .insight-title {
           font-size: var(--font-size-md);
           font-weight: 600;
           color: var(--text-primary);
           margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        .insight-badges {
-          display: flex;
-          gap: var(--spacing-xs);
+        .insight-badges { display: none; }
+        .status-dock {
+          position: absolute; top: 8px; right: 8px;
+          display: inline-flex; gap: 6px; align-items: center;
+          background: var(--bg-primary);
+          border: 1px solid var(--border-primary);
+          border-radius: 999px;
+          padding: 4px 8px;
         }
 
         .insight-badge {
           font-size: var(--font-size-xs);
-          padding: 2px 8px;
+          padding: 4px 8px;
           border-radius: var(--radius-sm);
           font-weight: 500;
           white-space: nowrap;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: all 0.2s ease;
+          cursor: default;
+          letter-spacing: 0.2px;
+        }
+
+        /* Compact, icon-only pill for status badges */
+        .insight-badge.icon-only {
+          width: 20px;
+          height: 20px;
+          padding: 0;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .insight-badge:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .impact-badge {
@@ -699,40 +996,83 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
           color: white;
         }
 
+        /* Radial confidence ring */
+        .confidence-badge.icon-only { background: transparent; }
+        .confidence-ring {
+          width: 20px; height: 20px; border-radius: 999px;
+          background: conic-gradient(var(--accent-blue) var(--confDeg,0deg), var(--border-primary) 0);
+          display: inline-flex; align-items: center; justify-content: center;
+        }
+        .confidence-center {
+          width: 14px; height: 14px; border-radius: 999px;
+          background: var(--bg-secondary);
+          display: flex; align-items: center; justify-content: center;
+        }
+
         .insight-description {
           font-size: var(--font-size-sm);
           color: var(--text-primary);
           line-height: 1.5;
-          margin-bottom: var(--spacing-sm);
+          margin-bottom: var(--spacing-xs);
+          flex: 1;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .insight-footer {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-top: var(--spacing-sm);
-          padding-top: var(--spacing-sm);
+          margin-top: auto;
+          padding-top: var(--spacing-xs);
           border-top: 1px solid var(--border-primary);
+          gap: var(--spacing-xs);
         }
 
         .relevant-clients {
           display: flex;
-          gap: var(--spacing-xs);
+          gap: 6px;
           flex-wrap: wrap;
+          flex: 1;
+          align-items: flex-start;
         }
 
         .client-tag {
           font-size: var(--font-size-xs);
-          padding: 2px 6px;
-          background: var(--accent-blue);
-          color: white;
+          padding: 4px 8px;
           border-radius: var(--radius-sm);
           font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: all 0.2s ease;
+          cursor: default;
+        }
+
+        .client-tag:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .insight-actions {
           display: flex;
-          gap: var(--spacing-xs);
+          gap: 6px;
+          flex-shrink: 0;
+          align-items: flex-start;
+          align-self: flex-end;
+        }
+
+        /* Tweak icon buttons inside action area */
+        .insight-actions .modern-icon-button {
+          border-radius: var(--radius-md);
+          width: 28px; height: 28px;
+        }
+
+        .insight-actions .modern-icon-button:hover {
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-sm);
         }
 
         .refreshing {
@@ -748,6 +1088,21 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
         .refreshing .metrics-grid {
           animation: pulse 1.5s ease-in-out infinite;
         }
+
+  @media (max-width: 1200px) {
+          .insights-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          }
+        }
+
+        @media (max-width: 900px) {
+          .insights-grid {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          }
+          /* footer actions always visible */
+          .insight-actions { display: flex; }
+        }
+        /* on wider screens keep footer actions visible */
 
         @media (max-width: 768px) {
           .dashboard-header {
@@ -769,6 +1124,11 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
             grid-template-columns: 1fr;
           }
 
+          .insights-grid {
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+          }
+
           .insight-header {
             flex-direction: column;
             gap: var(--spacing-sm);
@@ -778,7 +1138,118 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
           .insight-badges {
             flex-wrap: wrap;
           }
+
+          .insight-footer {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            align-items: stretch;
+          }
+
+          .insight-actions {
+            justify-content: center;
+          }
         }
+
+        /* Collapse client tag labels on very small screens */
+        @media (max-width: 420px) {
+          .client-tag .client-tag-label { display: none; }
+          .client-tag { width: 32px; justify-content: center; }
+        }
+
+        /* Footer icon row */
+        .footer-icons {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          gap: var(--spacing-xs);
+        }
+        .icon-group { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .client-icon { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--bg-primary); border: 1px solid var(--border-primary); }
+
+        /* Legend styling */
+        .insights-legend {
+          display: flex;
+          flex-wrap: nowrap;
+          gap: var(--spacing-lg);
+          align-items: center;
+          margin-top: var(--spacing-lg);
+          padding-top: var(--spacing-sm);
+          border-top: 1px solid var(--border-primary);
+          color: var(--text-secondary);
+          font-size: var(--font-size-sm);
+          overflow: hidden;
+          white-space: nowrap;
+        }
+
+        .legend-group {
+          display: inline-flex; align-items: center; gap: var(--spacing-xs);
+        }
+
+        .legend-label {
+          font-weight: 600;
+          color: var(--text-primary);
+          margin-right: 4px;
+        }
+
+        .legend-chip { display: inline-flex; align-items: center; gap: 6px; }
+
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
+        }
+
+        /* Generic tooltip pattern */
+        .has-tooltip {
+          position: relative;
+        }
+        .tooltip-bubble {
+          position: absolute;
+          z-index: 20;
+          bottom: 100%;
+          left: 0;
+          transform: translateY(-6px);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          border: 1px solid var(--border-primary);
+          border-radius: var(--radius-sm);
+          box-shadow: var(--shadow-sm);
+          padding: 8px 10px;
+          font-size: var(--font-size-sm);
+          line-height: 1.4;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity .15s ease, transform .15s ease;
+          max-width: 420px;
+          white-space: normal;
+        }
+        .tooltip-bubble::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 12px;
+          border-width: 6px;
+          border-style: solid;
+          border-color: var(--bg-primary) transparent transparent transparent;
+          filter: drop-shadow(0 -1px 0 var(--border-primary));
+        }
+        .has-tooltip:hover .tooltip-bubble {
+          opacity: 1;
+          transform: translateY(-10px);
+        }
+
+  /* Ultra-compact mode: further tighten */
+  .ultra-compact .insights-grid { gap: var(--spacing-sm); }
+  .ultra-compact .insight-card { padding: 6px; min-height: 160px; }
+  .ultra-compact .insight-description { -webkit-line-clamp: 2; margin-bottom: 4px; }
+  .ultra-compact .insights-legend { display: none; }
       `}</style>
 
       <div className="dashboard-header">
@@ -826,6 +1297,14 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
             styles={{ root: { width: '160px' } }}
           />
         </div>
+        <div className="view-controls">
+          <Toggle
+            label="Ultra-compact"
+            inlineLabel
+            checked={ultraCompact}
+            onChange={(_, val) => setUltraCompact(!!val)}
+          />
+        </div>
       </div>
 
       <div className={`metrics-grid ${refreshing ? 'refreshing' : ''}`}>
@@ -854,6 +1333,22 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
       <div className="insights-section">
         <div className="insights-header">
           <h3 className="insights-title">AI-Powered Market Intelligence</h3>
+          <span className="legend-info has-tooltip" aria-label="Legend">
+            <Info24Regular />
+            <span className="tooltip-bubble">
+              <strong>Legend</strong>
+              <div style={{marginTop:6, display:'grid', gridTemplateColumns:'auto 1fr', gap:6}}>
+                <span className="insight-badge icon-only" style={{ backgroundColor: 'var(--accent-red)' }}>{getImpactIcon('high')}</span>
+                <span>Impact level</span>
+                <span className="insight-badge timeframe-badge icon-only">{getTimeframeIcon('short')}</span>
+                <span>Timeframe</span>
+                <span className="insight-badge confidence-badge icon-only"><Star24Regular style={{ color: 'white', fontSize: '12px' }} /></span>
+                <span>Confidence</span>
+                <span className="client-icon">{getClientCategoryIcon('Conservative Investors')}</span>
+                <span>Relevant clients</span>
+              </div>
+            </span>
+          </span>
           {loadingInsights && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Spinner size={SpinnerSize.small} />
@@ -871,57 +1366,134 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
 
         <div className="insights-grid">
           {filteredInsights.map((insight) => (
-            <div key={insight.id} className={`insight-card ${insight.category}`}>
+            <div 
+              key={insight.id} 
+              className={`insight-card ${insight.category}`}
+              style={{ ['--impact-color' as any]: getImpactColor(insight.impact) }}
+            >
               <div className="insight-header">
-                <div className="insight-title-row">
-                  {getInsightIcon(insight.category)}
+                <div className="insight-title-row has-tooltip">
+                  <span className="category-avatar">{getInsightIcon(insight.category)}</span>
                   <h4 className="insight-title">{insight.title}</h4>
+                  <div className="tooltip-bubble">
+                    <strong style={{display:'inline-flex', alignItems:'center', gap:6}}>
+                      {getInsightIcon(insight.category)}
+                      {insight.category.charAt(0).toUpperCase() + insight.category.slice(1)} insight
+                    </strong>
+                    <div style={{marginTop:6, color:'var(--text-secondary)'}}>Hover the card for quick actions and glanceable status. Click icons to act.</div>
+                  </div>
                 </div>
-                
-                <div className="insight-badges">
-                  <span 
-                    className="insight-badge impact-badge"
-                    style={{ backgroundColor: getImpactColor(insight.impact) }}
-                  >
-                    {insight.impact} impact
+                {/* status icons moved to footer */}
+              </div>
+              
+              <div className="has-tooltip">
+                <p className="insight-description">{insight.description}</p>
+                <div className="tooltip-bubble" style={{left:'auto', right:0}}>
+                  <strong>Full detail</strong>
+                  <div style={{marginTop:6}}>{insight.description}</div>
+                </div>
+              </div>
+              
+              <div className="insight-footer">
+                <div className="footer-icons">
+                  <span className="icon-group">
+                    <span 
+                      className="insight-badge impact-badge icon-only"
+                      style={{ backgroundColor: getImpactColor(insight.impact) }}
+                      title={`${insight.impact} impact`}
+                      aria-label={`${insight.impact} impact`}
+                    >
+                      {getImpactIcon(insight.impact)}
+                    </span>
+                    <span 
+                      className="insight-badge timeframe-badge icon-only"
+                      title={`${insight.timeframe} term`}
+                      aria-label={`${insight.timeframe} term`}
+                    >
+                      {getTimeframeIcon(insight.timeframe)}
+                    </span>
+                    {insight.confidence > 0 && (
+                      <span 
+                        className="insight-badge confidence-badge icon-only"
+                        title={`${insight.confidence}% confidence`}
+                        aria-label={`${insight.confidence}% confidence`}
+                      >
+                        <span className="confidence-ring" style={{ ['--confDeg' as any]: `${insight.confidence * 3.6}deg` }}>
+                          <span className="confidence-center">
+                            <Star24Regular style={{ color: 'var(--accent-blue)', fontSize: '12px' }} />
+                          </span>
+                        </span>
+                      </span>
+                    )}
                   </span>
-                  <span className="insight-badge timeframe-badge">
-                    {insight.timeframe} term
+
+                  <span className="icon-group">
+                    {(() => {
+                      const maxIcons = 4;
+                      const clients = (insight.relevantClients || []).filter(Boolean);
+                      const groups = new Map<string, {names: string[], icon: JSX.Element, style: React.CSSProperties}>();
+                      clients.forEach((c) => {
+                        const key = getClientIconKey(c);
+                        const icon = getClientCategoryIcon(c) as JSX.Element;
+                        const style = getClientCategoryStyle(c) as React.CSSProperties;
+                        const g = groups.get(key);
+                        if (g) { g.names.push(c); }
+                        else { groups.set(key, { names: [c], icon, style }); }
+                      });
+                      const grouped = Array.from(groups.values());
+                      const show = grouped.slice(0, maxIcons);
+                      const extra = grouped.length - show.length;
+                      return (
+                        <>
+                          {show.map((g, idx) => (
+                            <span key={idx} className="has-tooltip client-icon" aria-label={g.names.join(', ')} title={g.names.join(', ')} style={g.style}>
+                              {g.icon}
+                              <div className="tooltip-bubble">
+                                <strong>{g.names.join(' • ')}</strong>
+                                <div style={{marginTop:6}}>{getClientRationale(g.names[0])}</div>
+                              </div>
+                            </span>
+                          ))}
+                          {extra > 0 && (
+                            <span className="client-icon" title={`+${extra} more groups`} aria-label={`+${extra} more groups`}>+{extra}</span>
+                          )}
+                        </>
+                      );
+                    })()}
                   </span>
-                  {insight.confidence > 0 && (
-                    <span className="insight-badge confidence-badge">
-                      {insight.confidence}% confidence
+
+                  {insight.id !== 'loading-placeholder' && insight.id !== 'ai-generation-error' && (
+                    <span className="icon-group">
+                      <ModernIconButton
+                        icon={<AlertOn24Regular />}
+                        title="Create Alert"
+                        variant="secondary"
+                        size="small"
+                        onClick={() => {/* TODO: wire alert creation */}}
+                      />
+                      <ModernIconButton
+                        icon={<Lightbulb24Regular />}
+                        title="Generate Recommendation"
+                        variant="primary"
+                        size="small"
+                        onClick={() => {/* TODO: wire recommendation generation */}}
+                      />
                     </span>
                   )}
                 </div>
               </div>
-              
-              <p className="insight-description">{insight.description}</p>
-              
-              <div className="insight-footer">
-                <div className="relevant-clients">
-                  {insight.relevantClients.map((client, index) => (
-                    <span key={index} className="client-tag">{client}</span>
-                  ))}
-                </div>
-                
-                {insight.id !== 'loading-placeholder' && insight.id !== 'ai-generation-error' && (
-                  <div className="insight-actions">
-                    <ModernButton size="small" variant="secondary">
-                      Create Alert
-                    </ModernButton>
-                    <ModernButton 
-                      size="small" 
-                      variant="primary"
-                      icon={<PersonFeedback24Regular />}
-                    >
-                      Generate Recommendation
-                    </ModernButton>
-                  </div>
-                )}
-              </div>
             </div>
           ))}
+        </div>
+        {/* Condensed single-line legend */}
+        <div className="insights-legend">
+          <span className="legend-group">
+            <span className="legend-label">Legend:</span>
+            <span className="legend-chip" title="Impact"><span className="insight-badge icon-only" style={{ backgroundColor: 'var(--accent-red)' }}>{getImpactIcon('high')}</span> Impact</span>
+            <span className="legend-chip" title="Timeframe"><span className="insight-badge timeframe-badge icon-only">{getTimeframeIcon('short')}</span> Timeframe</span>
+            <span className="legend-chip" title="Confidence"><span className="insight-badge confidence-badge icon-only"><Star24Regular style={{ color: 'white', fontSize: '12px' }} /></span> Confidence</span>
+            <span className="legend-chip" title="Relevant clients"><span className="client-icon">{getClientCategoryIcon('Conservative Investors')}</span> Clients</span>
+          </span>
         </div>
       </div>
     </div>
