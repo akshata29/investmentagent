@@ -1,0 +1,765 @@
+//App.tsx file content
+import React , { Component, RefObject } from 'react';
+import { Dropdown, IDropdownOption, PrimaryButton, DefaultButton, TextField, Panel, Text, Link, Pivot, PivotItem, Label } from '@fluentui/react';
+import { Container } from 'reactstrap';
+import { Toggle } from '@fluentui/react/lib/Toggle';
+import { getKeyPhrases, getTokenOrRefresh, getGPTCustomPromptCompletion, gptLiveGuidance, generateRecommendation } from './api/backend_api_orchestrator.ts';
+import {getImageSasUrls, getGPTVInsights } from './api/backend_api_orchestrator.ts';
+import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
+import './App.css';
+import './styles/modern-theme.css';
+import { Delete24Regular } from "@fluentui/react-icons";
+import * as speechsdk from 'microsoft-cognitiveservices-speech-sdk';
+import SpokenLanguageOptions from './AppSettings.tsx';
+import { ScenarioOptions } from './AppSettings.tsx';
+import { insuranceConversationTemplate } from './ConversationTemplates';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeToggle } from './components/ThemeToggle';
+import { ModernSettingsPanel } from './components/ModernSettingsPanel';
+import { ModernSection, ModernPivotSection, ModernTextArea } from './components/ModernSection';
+import { ModernButton, ModernIconButton } from './components/ModernButton';
+import { SentimentGauge } from './components/SentimentGauge';
+import { StatusBar } from './components/StatusBar';
+import { NotificationSystem, useNotifications } from './components/NotificationSystem';
+import { RecommendationPanel } from './components/RecommendationPanel';
+
+let recognizer: any;
+// Define an interface for the image object  
+interface Image {  
+  name: string;  
+  sasUrl: string;  
+  imageInsights: string;
+} 
+
+interface AppState {
+    displayText: string;
+    displayNLPOutput: string;  
+    value: string;
+    displayKeyPhrases: string;
+    displayPiiText: string;
+    gptInsightsOutput: string;
+    transcriptEventCount: number;
+    isSettingsPanelOpen: boolean;
+    conversationTemplate: string;
+    copilotChecked: boolean;
+    agentGuidance: string;
+    taskCompleted: string;
+    spokenLanguage: string;
+    imageList: Image[];
+    selectedImage: string;
+    caseNumber: number;
+    gptvInsights: string;
+    showPhotoPanel: boolean;
+    showPromptPanel: boolean;
+    showTranscriptPanel: boolean;
+    showPIIRedactedTranscript: boolean;
+    sentimentData: {
+        overall: {
+            sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+            score: number;
+            confidenceScores: {
+                positive: number;
+                negative: number;
+                neutral: number;
+            };
+        };
+        sentences: Array<{
+            text: string;
+            sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+            confidenceScores: {
+                positive: number;
+                negative: number;
+                neutral: number;
+            };
+            opinions?: any[];
+        }>;
+    };
+    isRecording: boolean;
+    isProcessing: boolean;
+    connectionStatus: 'connected' | 'disconnected' | 'connecting';
+    recommendation: string;
+    isGeneratingRecommendation: boolean;
+}export default class App extends Component<{}, AppState> {
+  private containerRef: RefObject<HTMLDivElement>;
+  
+  constructor(props: any) {
+    super(props);
+    this.containerRef = React.createRef();
+    this.state = {
+        value: '',
+        displayText: 'Speak to your microphone or copy/paste conversation transcript here',
+        displayNLPOutput: '',
+        displayKeyPhrases: '',
+        displayPiiText: '',
+        gptInsightsOutput: '',
+        transcriptEventCount: 0,
+        isSettingsPanelOpen: false, 
+        conversationTemplate: insuranceConversationTemplate,    
+        agentGuidance: '',
+        taskCompleted: '',
+        spokenLanguage: 'en-US',
+        selectedImage: '',
+        imageList: [],    
+        caseNumber: Date.now(),
+        gptvInsights: '',  
+        copilotChecked: true,  
+        showPhotoPanel: false,
+        showPromptPanel: true,
+        showTranscriptPanel: true,
+        showPIIRedactedTranscript: true,
+        sentimentData: {
+            overall: {
+                sentiment: 'neutral',
+                score: 0.5,
+                confidenceScores: {
+                    positive: 0.33,
+                    negative: 0.33,
+                    neutral: 0.34
+                }
+            },
+            sentences: []
+        },
+        isRecording: false,
+        isProcessing: false,
+        connectionStatus: 'disconnected',
+        recommendation: 'Click "Generate Recommendations" to analyze the conversation and get personalized Fisher Investments recommendations.',
+        isGeneratingRecommendation: false
+    };  }
+
+  handleSpokenLangDropdownChange = (event: React.FormEvent<HTMLDivElement>, option?: IDropdownOption) => {
+    if (option) {
+      this.setState({spokenLanguage: option.key as string});
+    } else {
+      this.setState({spokenLanguage: 'en-US'});
+    }
+  };
+
+  handleToggleChange = () => {
+    this.setState((prevState) => ({
+      copilotChecked: !prevState.copilotChecked,
+    }));
+  };
+
+  handleTranscriptPanelToggleChange = () => {
+    this.setState((prevState) => ({
+      showTranscriptPanel: !prevState.showTranscriptPanel,
+    }));
+  };
+
+  handlePIITranscriptToggleChange = () => {
+    this.setState((prevState) => ({
+      showPIIRedactedTranscript: !prevState.showPIIRedactedTranscript,
+    }));
+  };
+
+  handlePhotoPanelToggleChange = () => {
+    this.setState((prevState) => ({
+      showPhotoPanel: !prevState.showPhotoPanel,
+    }));
+  };
+
+  handlePromptPanelToggleChange = () => {
+    this.setState((prevState) => ({
+      showPromptPanel: !prevState.showPromptPanel,
+    }));
+  };
+
+  scrollLeft = () => { if (this.containerRef.current) {
+      this.containerRef.current.scrollLeft -= 200; //Adjust as needed
+    }
+  };
+
+  scrollRight = () => { if (this.containerRef.current) {
+          this.containerRef.current.scrollLeft += 200; //Adjust as needed
+      }
+  };
+
+  async componentDidMount() { // check for valid speech key/region
+      const tokenRes = await getTokenOrRefresh();
+      if (tokenRes.authToken === null) {
+          this.setState({ displayText: 'ERROR: ' + tokenRes.error });
+      }
+  }
+
+  async sttFromMic() {
+      // Set connecting status
+      this.setState({ connectionStatus: 'connecting', isProcessing: true });
+      
+      const tokenObj = await getTokenOrRefresh();
+      
+      if (tokenObj.authToken === null) {
+          this.setState({ 
+              displayText: 'ERROR: ' + tokenObj.error,
+              connectionStatus: 'disconnected',
+              isProcessing: false,
+              isRecording: false
+          });
+          return;
+      }
+      
+      const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(tokenObj.authToken as string, tokenObj.region as string);
+      speechConfig.speechRecognitionLanguage = this.state.spokenLanguage;        
+      const audioConfig = speechsdk.AudioConfig.fromDefaultMicrophoneInput();
+      recognizer = new speechsdk.SpeechRecognizer(speechConfig, audioConfig);
+      
+      this.setState({
+          displayText: 'Speak to your microphone or copy/paste conversation transcript here',
+          connectionStatus: 'connected',
+          isRecording: true,
+          isProcessing: false
+      });      
+
+      let resultText = "";
+      let nlpText = "";
+      let keyPhraseText = "";
+      let piiText = "";
+
+      recognizer.sessionStarted = (s: any, e: any) => { };
+
+      recognizer.recognized = async (s: any, e: any) => {
+          if(e.result.reason === ResultReason.RecognizedSpeech){
+              resultText += `\n${e.result.text}`;    
+              this.setState({ displayText: resultText }); 
+              this.setState( {transcriptEventCount: this.state.transcriptEventCount+1});
+           
+            (document.getElementById('transcriptTextarea') as HTMLTextAreaElement).value = resultText;  
+            const nlpObj = await getKeyPhrases(e.result.text);   
+            const entityText = nlpObj.entityExtracted;             
+            if(entityText.length > 12){
+                nlpText += entityText;
+                this.setState({ displayNLPOutput: nlpText.replace('<br/>', '\n') });
+            }
+            const keyPhraseOut = JSON.stringify(nlpObj.keyPhrasesExtracted); 
+            if(keyPhraseOut.length > 15){
+                keyPhraseText += "\n" + keyPhraseOut;
+                this.setState({ displayKeyPhrases: keyPhraseText }); 
+            }                
+            const piiOut = nlpObj.piiExtracted;
+            if(piiOut.length > 21){
+              piiText += "\n" + piiOut; 
+                this.setState({ displayPiiText: piiText.replace('<br/>', '\n') }); 
+            }
+            
+            // Update sentiment analysis if available
+            if(nlpObj.sentimentAnalysis){
+                this.setState({ sentimentData: nlpObj.sentimentAnalysis });
+            }
+            
+            if(this.state.transcriptEventCount % 2 === 0 && this.state.copilotChecked){
+                this.gptLiveGuidance();
+            }            
+          }
+          else if (e.result.reason === ResultReason.NoMatch) {
+              resultText += `\n`
+          }
+      };
+      recognizer.startContinuousRecognitionAsync();
+  }
+
+  async stopRecording(){
+      this.setState({ isProcessing: true });
+      
+      if (recognizer) {
+          recognizer.stopContinuousRecognitionAsync();
+      }
+      
+      this.setState({ 
+          isRecording: false, 
+          connectionStatus: 'disconnected',
+          isProcessing: false 
+      });
+      
+      if(this.state.copilotChecked){
+          this.gptLiveGuidance();
+      }
+  }
+
+  async agentAssistDebug(){              
+    if(this.state.copilotChecked){      
+        this.gptLiveGuidance();     
+    }
+  }
+
+  async gptCustomPromptCompetion(){
+    var customPromptText = (document.getElementById("customPromptTextarea") as HTMLTextAreaElement).value;
+    var transcriptInputForPmt = this.state.displayText;
+    const gptObj = await getGPTCustomPromptCompletion(transcriptInputForPmt, customPromptText);
+    const gptText = gptObj.data.text;
+    try{
+        this.setState({ gptInsightsOutput: gptText.replace("\n\n", "") });
+    }catch(error){
+        this.setState({ gptInsightsOutput: gptObj.data });
+    }
+  }
+
+  async gptLiveGuidance(){
+    var conversationTemplate = this.state.conversationTemplate;    
+    var transcriptText = this.state.displayText;
+    const gptObj = await gptLiveGuidance(transcriptText, conversationTemplate);
+    const gptText = gptObj.data.message.content;
+    const regex = /Addressed Questions(.*?)Unaddressed Questions(.*)/s;
+    var contentBetweenSections = '';
+    var contentAfterSecondSection = '';   
+    const match = gptText.match(regex);
+    if (match) {
+      contentBetweenSections = match[2].trim();
+      contentAfterSecondSection = match[1].trim();      
+    } else {
+      contentBetweenSections = gptText;
+      contentAfterSecondSection = gptText;  
+    }
+
+    try{
+        this.setState({ agentGuidance: contentBetweenSections });
+        this.setState({ taskCompleted: contentAfterSecondSection });
+    }catch(error){
+        this.setState({ agentGuidance: 'unknown error happened' });
+    }
+  }
+
+  async generateInvestmentRecommendation() {
+    this.setState({ isGeneratingRecommendation: true });
+    
+    try {
+      const transcriptText = this.state.displayText;
+      
+      // Check if there's sufficient content for recommendation
+      if (!transcriptText || transcriptText.length < 50 || transcriptText === 'Speak to your microphone or copy/paste conversation transcript here') {
+        this.setState({ 
+          recommendation: '***Waiting for More Client Information***\n\nPlease ensure you have captured sufficient conversation content including client\'s financial goals, risk tolerance, investment timeline, and current financial situation before generating recommendations.',
+          isGeneratingRecommendation: false 
+        });
+        return;
+      }
+
+      const gptObj = await generateRecommendation(transcriptText);
+      console.log('Recommendation response:', gptObj); // Debug log
+      
+      // Handle different response structures
+      let recommendationText = '';
+      if (gptObj && gptObj.data) {
+        if (gptObj.data.message && gptObj.data.message.content) {
+          recommendationText = gptObj.data.message.content;
+        } else if (gptObj.data.content) {
+          recommendationText = gptObj.data.content;
+        } else if (typeof gptObj.data === 'string') {
+          recommendationText = gptObj.data;
+        } else {
+          recommendationText = 'Unexpected response format from recommendation service.';
+        }
+      } else {
+        recommendationText = 'No response received from recommendation service.';
+      }
+      
+      this.setState({ 
+        recommendation: recommendationText,
+        isGeneratingRecommendation: false 
+      });
+    } catch (error) {
+      console.error('Error generating recommendation:', error);
+      this.setState({ 
+        recommendation: `Error generating recommendation: ${error instanceof Error ? error.message : 'Unknown error occurred'}`,
+        isGeneratingRecommendation: false 
+      });
+    }
+  }
+
+  async getImageSasUrls(){    
+    //var caseNumber = (document.getElementById("casenumbertextarea") as HTMLTextAreaElement).value;
+    var caseNumber = this.state.caseNumber;
+    const imageListObj = await getImageSasUrls(String(caseNumber));
+    this.setState({imageList :imageListObj.data});
+    const imageListWithGptvObj = await getGPTVInsights(imageListObj.data);
+    this.setState({imageList :imageListWithGptvObj.data});
+  }
+
+  onThumbnailClick = (imageUrl: string, imageInsights: string) => {  
+    this.setState({selectedImage: imageUrl});
+    this.setState({gptvInsights: imageInsights  });
+  }; 
+
+  openSettingsPanel = () => { this.setState({ isSettingsPanelOpen: true }); }
+  closeSettingsPanel = () => { this.setState({ isSettingsPanelOpen: false });  }
+  onConversationTemplateChange = () => {
+    var conversationTemplateText = (document.getElementById("conversationtemplatetextarea") as HTMLTextAreaElement).value;
+    this.setState({conversationTemplate: conversationTemplateText})
+  }
+
+  onTranscriptTextareaChange = () => {
+    var transcritionText = (document.getElementById("transcriptTextarea") as HTMLTextAreaElement).value;
+    this.setState({displayText: transcritionText})
+  }
+
+  onClearAllTextarea = () => {
+    this.setState({displayText: ''});
+    this.setState({displayNLPOutput: ''});
+    this.setState({displayKeyPhrases: ''});
+    this.setState({displayPiiText: ''});
+    this.setState({gptInsightsOutput: ''});    
+    (document.getElementById("customPromptTextarea") as HTMLTextAreaElement).value= '';
+    (document.getElementById("transcriptTextarea") as HTMLTextAreaElement).value= '';
+  }
+
+  render() {   
+    return (
+        <Container className="app-container" style={{ paddingBottom: '80px' }}>
+          {/* Theme Toggle Button */}
+          <ThemeToggle />
+          
+          {/* Modern Header */}
+          <div className="modern-card bounce-in">
+            <div className="modern-card-header">
+              <h3 style={{ margin: 0, textAlign: 'center' }}>
+                {this.state.isRecording && (
+                  <span style={{ 
+                    display: 'inline-block', 
+                    width: '12px', 
+                    height: '12px', 
+                    backgroundColor: '#ff4444', 
+                    borderRadius: '50%', 
+                    marginRight: '8px',
+                    animation: 'pulse 1.5s infinite'
+                  }}></span>
+                )}
+                🤖 AI Investment Agent - Conversation Copilot
+              </h3>
+              <p style={{ 
+                margin: 'var(--spacing-sm) 0 0 0', 
+                fontSize: 'var(--font-size-sm)', 
+                opacity: 0.9,
+                textAlign: 'center'
+              }}>
+                {this.state.isRecording 
+                  ? '🎤 Recording conversation - AI analysis in progress...' 
+                  : 'Multimodal AI-powered conversation analysis and real-time guidance'
+                }
+              </p>
+            </div>
+            
+            {/* Control Buttons */}
+            <div className="modern-button-group">
+              <ModernButton 
+                onClick={() => this.sttFromMic()}
+                variant="primary"
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 1a3 3 0 0 0-3 3v3a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM6 4a2 2 0 1 1 4 0v3a2 2 0 1 1-4 0V4z"/>
+                    <path d="M4 9.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1H4.5a.5.5 0 0 1-.5-.5z"/>
+                    <path d="M8 13.5a4.5 4.5 0 0 1-4.473-4H2.5a.5.5 0 0 1 0-1h1.027a4.5 4.5 0 0 1 8.946 0H13.5a.5.5 0 0 1 0 1h-1.027A4.5 4.5 0 0 1 8 13.5z"/>
+                  </svg>
+                }
+                loading={this.state.connectionStatus === 'connecting'}
+                disabled={this.state.isRecording}
+              >
+                {this.state.isRecording ? 'Recording...' : 'Start Conversation'}
+              </ModernButton>
+              
+              <ModernButton 
+                onClick={() => this.stopRecording()}
+                variant="danger"
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <rect x="5" y="6" width="6" height="4" rx="1"/>
+                  </svg>
+                }
+                disabled={!this.state.isRecording}
+                loading={this.state.isProcessing && this.state.isRecording}
+              >
+                {this.state.isRecording ? 'End Conversation' : 'End Conversation'}
+              </ModernButton>
+              
+              <ModernButton 
+                onClick={this.openSettingsPanel}
+                variant="secondary"
+                icon={
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                    <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
+                  </svg>
+                }
+              >
+                Settings
+              </ModernButton>
+              
+              <ModernIconButton
+                icon={<Delete24Regular />}
+                onClick={this.onClearAllTextarea}
+                title="Clear all text areas"
+                variant="secondary"
+              />
+            </div>
+          </div>
+
+          {/* Modern Settings Panel */}
+          <ModernSettingsPanel
+            isOpen={this.state.isSettingsPanelOpen}
+            onDismiss={this.closeSettingsPanel}
+            spokenLanguage={this.state.spokenLanguage}
+            onSpokenLanguageChange={this.handleSpokenLangDropdownChange}
+            showTranscriptPanel={this.state.showTranscriptPanel}
+            onTranscriptPanelToggle={this.handleTranscriptPanelToggleChange}
+            showPromptPanel={this.state.showPromptPanel}
+            onPromptPanelToggle={this.handlePromptPanelToggleChange}
+            showPhotoPanel={this.state.showPhotoPanel}
+            onPhotoPanelToggle={this.handlePhotoPanelToggleChange}
+            showPIIRedactedTranscript={this.state.showPIIRedactedTranscript}
+            onPIITranscriptToggle={this.handlePIITranscriptToggleChange}
+            copilotChecked={this.state.copilotChecked}
+            onCopilotToggle={this.handleToggleChange}
+            conversationTemplate={this.state.conversationTemplate}
+            onConversationTemplateChange={this.onConversationTemplateChange}
+          />
+
+          {/* Live Guidance Section */}
+          {this.state.copilotChecked && (
+            <div className="modern-grid modern-grid-2">
+              <ModernPivotSection
+                title="Live Guidance - Pending Tasks"
+                items={[{
+                  key: 'pending',
+                  headerText: 'Pending Tasks (Live Guidance)',
+                  content: (
+                    <ModernTextArea
+                      id="taskPendingTextarea"
+                      defaultValue={this.state.agentGuidance}
+                      rows={10}
+                    />
+                  )
+                }]}
+              />
+              
+              <ModernPivotSection
+                title="Live Guidance - Completed Tasks"
+                items={[{
+                  key: 'completed',
+                  headerText: 'Completed Tasks (Live Guidance)',
+                  content: (
+                    <ModernTextArea
+                      id="taskCompletedTextarea"
+                      defaultValue={this.state.taskCompleted}
+                      rows={10}
+                    />
+                  )
+                }]}
+              />
+            </div>
+          )}
+
+          {/* Transcript Section */}
+          {this.state.showTranscriptPanel && (
+            <div className="modern-grid modern-grid-3">
+              <ModernPivotSection
+                title="Conversation Transcripts"
+                items={[
+                  {
+                    key: 'realtime',
+                    headerText: 'Real-time Transcript',
+                    content: (
+                      <ModernTextArea
+                        id="transcriptTextarea"
+                        defaultValue={this.state.displayText}
+                        onChange={() => this.onTranscriptTextareaChange()}
+                        rows={10}
+                      />
+                    )
+                  },
+                  ...(this.state.showPIIRedactedTranscript ? [{
+                    key: 'pii',
+                    headerText: 'PII-redacted Transcript',
+                    content: (
+                      <ModernTextArea
+                        id="piiTextarea"
+                        defaultValue={this.state.displayPiiText}
+                        rows={10}
+                        readOnly
+                      />
+                    )
+                  }] : [])
+                ]}
+              />
+              
+              <ModernPivotSection
+                title="Language AI Insights"
+                items={[{
+                  key: 'entities',
+                  headerText: 'Entities Extracted',
+                  content: (
+                    <ModernTextArea
+                      id="entitiesTextarea"
+                      defaultValue={this.state.displayNLPOutput}
+                      rows={10}
+                      readOnly
+                    />
+                  )
+                }]}
+              />
+
+              {/* Sentiment Analysis Gauge */}
+              <ModernSection title="Sentiment Analysis">
+                <SentimentGauge sentimentData={this.state.sentimentData} />
+              </ModernSection>
+            </div>
+          )}
+
+          {/* Investment Recommendations Section */}
+          <RecommendationPanel
+            recommendation={this.state.recommendation}
+            isGenerating={this.state.isGeneratingRecommendation}
+            onGenerateRecommendation={() => this.generateInvestmentRecommendation()}
+          />
+
+          {/* Custom Prompts Section */}
+          {this.state.showPromptPanel && (
+            <div className="modern-grid modern-grid-2">
+              <ModernSection 
+                title="Custom Business Insights"
+                headerActions={
+                  <ModernButton 
+                    onClick={() => this.gptCustomPromptCompetion()}
+                    variant="primary"
+                    size="small"
+                  >
+                    Ask GPT
+                  </ModernButton>
+                }
+              >
+                <ModernTextArea
+                  id="customPromptTextarea"
+                  placeholder="Enter your custom prompt to extract business insights..."
+                  rows={10}
+                />
+              </ModernSection>
+              
+              <ModernSection title="GPT Response">
+                <ModernTextArea
+                  id="gptResponseTextarea"
+                  defaultValue={this.state.gptInsightsOutput}
+                  rows={12}
+                  readOnly
+                />
+              </ModernSection>
+            </div>
+          )}
+
+          {/* Photo Analysis Section */}
+          {this.state.showPhotoPanel && (
+            <div className="modern-grid modern-grid-3">
+              <ModernSection title="Photo Upload" className="col-span-1">
+                <div style={{ marginBottom: 'var(--spacing-md)' }}>
+                  <TextField
+                    label="Case number:"
+                    id="casenumbertextarea"
+                    defaultValue={String(this.state.caseNumber)}
+                    styles={{
+                      fieldGroup: {
+                        backgroundColor: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-primary)'
+                      },
+                      field: {
+                        color: 'var(--text-primary)'
+                      }
+                    }}
+                  />
+                </div>
+                
+                <div style={{ 
+                  display: 'flex', 
+                  gap: 'var(--spacing-sm)', 
+                  flexWrap: 'wrap' 
+                }}>
+                  <ModernButton
+                    onClick={() => {
+                      const url = `/upload/${this.state.caseNumber}`;
+                      window.open(url, '_blank');
+                    }}
+                    variant="primary"
+                    size="small"
+                  >
+                    Go to Photo Upload
+                  </ModernButton>
+                  
+                  <ModernButton
+                    onClick={() => this.getImageSasUrls()}
+                    variant="secondary"
+                    size="small"
+                  >
+                    Ask GPT-Vision
+                  </ModernButton>
+                </div>
+
+                {/* Photo Gallery */}
+                <div style={{ marginTop: 'var(--spacing-lg)' }}>
+                  <h4>Received Photos</h4>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', 
+                    gap: 'var(--spacing-sm)' 
+                  }}>
+                    {this.state.imageList.map((image, index) => (
+                      <img
+                        key={index}
+                        src={image.sasUrl}
+                        alt={image.name}
+                        onClick={() => this.onThumbnailClick(image.sasUrl, image.imageInsights)}
+                        style={{
+                          width: '100%',
+                          height: '80px',
+                          objectFit: 'cover',
+                          borderRadius: 'var(--radius-md)',
+                          cursor: 'pointer',
+                          border: '2px solid var(--border-primary)',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                          e.currentTarget.style.borderColor = 'var(--color-primary)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.borderColor = 'var(--border-primary)';
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </ModernSection>
+              
+              <ModernSection title="Selected Image" className="col-span-1">
+                {this.state.selectedImage && (
+                  <img
+                    src={this.state.selectedImage}
+                    alt="Selected"
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-primary)'
+                    }}
+                  />
+                )}
+              </ModernSection>
+              
+              <ModernSection title="GPT-Vision Analysis" className="col-span-1">
+                <ModernTextArea
+                  id="imageInsightsTextarea"
+                  defaultValue={this.state.gptvInsights}
+                  rows={12}
+                  readOnly
+                />
+              </ModernSection>
+            </div>
+          )}
+          
+          <StatusBar 
+            isRecording={this.state.isRecording}
+            connectionStatus={this.state.connectionStatus}
+            isProcessing={this.state.isProcessing}
+            transcriptCount={this.state.transcriptEventCount}
+          />
+    </Container>
+    );
+  }//end of render method
+}//end of App class
+
+
