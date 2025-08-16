@@ -1,4 +1,18 @@
-/* Modern Theme Variables */
+/* Global Reset for Full Width */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* CSS Custom Properties (Variables) for Modern Theme */
 :root {
   /* Light Theme - Professional Color Palette */
   --color-primary: #0066cc;
@@ -153,13 +167,28 @@ body {
 .app-container {
   min-height: 100vh;
   background-color: var(--bg-primary);
-  padding-top: var(--spacing-lg);
+  padding: var(--spacing-lg) var(--spacing-md);
   position: relative;
+  width: 100%;
+  max-width: none;
+}
+
+/* Responsive padding for better use of space */
+@media (min-width: 1200px) {
+  .app-container {
+    padding: var(--spacing-lg) var(--spacing-xl);
+  }
+}
+
+@media (min-width: 1600px) {
+  .app-container {
+    padding: var(--spacing-lg) calc(var(--spacing-xl) * 2);
+  }
 }
 
 /* Ensure proper spacing from theme toggle */
 .app-container > .modern-card:first-of-type {
-  margin-top: var(--spacing-xl);
+  margin-top: 0;
 }
 
 /* Theme transition for all elements */
@@ -236,10 +265,47 @@ body {
 /* Professional Button System */
 .modern-button-group {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
   justify-content: center;
   flex-wrap: wrap;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
+}
+
+/* Compact Header Styles */
+.compact-header .modern-icon-button {
+  min-width: 36px !important;
+  min-height: 36px !important;
+}
+
+@media (max-width: 768px) {
+  .compact-header {
+    flex-direction: column !important;
+    gap: var(--spacing-sm) !important;
+    padding: var(--spacing-sm) !important;
+  }
+  
+  .compact-header > div:first-child {
+    flex: none !important;
+    text-align: center;
+  }
+  
+  .compact-header h3 {
+    font-size: var(--font-size-md) !important;
+  }
+  
+  .compact-header > div:last-child {
+    gap: var(--spacing-xs) !important;
+  }
+  
+  .compact-header .modern-icon-button {
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+  
+  .compact-header .theme-toggle-inline {
+    width: 32px !important;
+    height: 32px !important;
+  }
 }
 
 .modern-button {
@@ -637,11 +703,34 @@ body {
 }
 
 .modern-grid-2 {
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
 }
 
 .modern-grid-3 {
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Enhanced responsive grid layouts */
+@media (min-width: 1200px) {
+  .modern-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .modern-grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+@media (min-width: 1600px) {
+  .modern-grid-2 {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+  }
+  
+  .modern-grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-xl);
+  }
 }
 
 /* Theme Toggle Button */
@@ -662,6 +751,28 @@ body {
   box-shadow: var(--shadow-lg);
   transition: all 0.3s ease;
   color: var(--text-primary);
+}
+
+/* Inline Theme Toggle - for use within headers */
+.theme-toggle-inline {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+}
+
+.theme-toggle-inline:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--text-on-primary);
+  transform: scale(1.05);
 }
 
 .theme-toggle:hover {

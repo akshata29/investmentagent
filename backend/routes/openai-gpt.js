@@ -213,11 +213,20 @@ router.post('/gptv/imageinsights', async (req, res) => {
 //Post operation /gpt/recommendation - Generate investment recommendations  
 router.post('/gpt/recommendation', async (req, res) => {
     const conversation_transcript = req.body.transcript;
+    console.log(`Generating recommendations with FULL transcript (${conversation_transcript.length} characters)`);
     const url = aoai_chatgpt_4_endpoint + 'openai/deployments/' + aoai_chatgpt_4_deployment_name + '/chat/completions?api-version=' + aoai_chatgpt_4_api_version;
     
     const system_content = `Act as a Fisher Investments senior investment advisor who specializes in the comprehensive product and service portfolio offered by Fisher Investments. 
 
-You are analyzing a real-time conversation transcript between a Fisher Investments advisor and a potential client. Your task is to analyze this information and recommend suitable Fisher Investments products and services that could enhance the client's financial wellbeing and meet their specific investment needs.
+You are analyzing the COMPLETE conversation transcript between a Fisher Investments advisor and a potential client. This transcript contains the ENTIRE conversation history, not just individual utterances. Your task is to analyze ALL the information provided throughout the conversation to recommend suitable Fisher Investments products and services that could enhance the client's financial wellbeing and meet their specific investment needs.
+
+IMPORTANT: Analyze the FULL conversation context including:
+- All client statements about financial goals and objectives
+- Complete discussion of risk tolerance and investment timeline
+- Full employment/income information shared
+- Any family or estate planning considerations mentioned
+- All investment experience or preferences discussed
+- Complete financial situation context
 
 Fisher Investments Product Line Focus Areas:
 - Portfolio Management Services (equity-focused, diversified global portfolios)
@@ -237,16 +246,16 @@ Key Investment Philosophy:
 - Focus on equity investments as primary wealth-building vehicle
 
 IMPORTANT CONSTRAINTS:
-- If the transcript does not contain sufficient information about the client's financial situation, investment goals, risk tolerance, or time horizon, respond ONLY with: "***Waiting for More Client Information***"
+- If the COMPLETE transcript does not contain sufficient information about the client's financial situation, investment goals, risk tolerance, or time horizon, respond ONLY with: "***Waiting for More Client Information***"
 - Only generate recommendations when you have adequate information about: employment/income status, investment objectives, time horizon, risk tolerance, current financial situation
 - Focus exclusively on Fisher Investments' actual service offerings
-- Provide realistic, client-appropriate recommendations
+- Provide realistic, client-appropriate recommendations based on the COMPLETE conversation context
 
-If sufficient information is available, provide 4 concise bullet points recommending specific Fisher Investments services with brief explanations of why each would benefit this particular client based on their disclosed circumstances.`;
+If sufficient information is available, provide 4 concise bullet points recommending specific Fisher Investments services with brief explanations of why each would benefit this particular client based on their disclosed circumstances throughout the entire conversation.`;
 
     const messages = [
         { role: "system", content: system_content },
-        { role: "user", content: `Here's the conversation transcript between the Fisher Investments advisor and client:\n\n${conversation_transcript}\n\nBased on this information, provide investment recommendations from Fisher Investments' service portfolio.`},
+        { role: "user", content: `Here's the COMPLETE conversation transcript between the Fisher Investments advisor and client. Please analyze the ENTIRE conversation context to provide comprehensive investment recommendations:\n\n${conversation_transcript}\n\nBased on ALL the information discussed throughout this complete conversation, provide investment recommendations from Fisher Investments' service portfolio.`},
     ];
     
     var starttime = new Date();

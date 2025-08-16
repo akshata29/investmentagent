@@ -43,13 +43,13 @@ export const RecommendationPanel: React.FC<RecommendationPanelProps> = ({
     const status = getRecommendationStatus();
     switch (status) {
       case 'generating':
-        return 'Analyzing conversation and generating personalized recommendations...';
+        return 'Auto-generating personalized recommendations from conversation...';
       case 'waiting':
-        return 'Waiting for sufficient client information';
+        return 'Waiting for sufficient client information (auto-generated during conversation)';
       case 'error':
         return 'Error occurred during recommendation generation';
       case 'complete':
-        return 'Fisher Investments recommendations generated';
+        return 'Investments recommendations generated (auto-updated during conversation)';
     }
   };
 
@@ -91,6 +91,13 @@ export const RecommendationPanel: React.FC<RecommendationPanelProps> = ({
           font-weight: 600;
           color: var(--text-primary);
           margin: 0;
+        }
+
+        .recommendation-subtitle {
+          font-size: var(--font-size-sm);
+          color: var(--text-secondary);
+          margin: 0;
+          margin-top: 2px;
         }
 
         .recommendation-status-bar {
@@ -179,7 +186,10 @@ export const RecommendationPanel: React.FC<RecommendationPanelProps> = ({
 
       <div className="recommendation-header">
         <Money24Regular style={{ color: 'var(--accent-blue)' }} />
-        <h3 className="recommendation-title">Investment Recommendations</h3>
+        <div>
+          <h3 className="recommendation-title">Investment Recommendations</h3>
+          <p className="recommendation-subtitle">Auto-generated during conversation</p>
+        </div>
       </div>
 
       <div className="recommendation-status-bar">
@@ -195,7 +205,7 @@ export const RecommendationPanel: React.FC<RecommendationPanelProps> = ({
           variant="primary"
           loading={isGenerating}
         >
-          {isGenerating ? "Generating..." : "Generate Recommendations"}
+          {isGenerating ? "Generating..." : "Refresh Recommendations"}
         </ModernButton>
       </div>
 
@@ -203,7 +213,7 @@ export const RecommendationPanel: React.FC<RecommendationPanelProps> = ({
         value={formatRecommendation(recommendation)}
         readOnly
         rows={12}
-        placeholder="Investment recommendations will appear here after analyzing the conversation..."
+        placeholder="Investment recommendations will auto-generate as you speak and will appear here. Click 'Refresh Recommendations' to manually update."
         className={`recommendation-content ${getRecommendationStatus()}`}
       />
     </div>

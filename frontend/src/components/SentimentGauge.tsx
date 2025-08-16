@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Toggle } from '@fluentui/react';
 
 interface SentimentData {
   overall: {
@@ -19,11 +20,38 @@ interface SentimentData {
       neutral: number;
     };
     opinions?: any[];
+    timestamp?: number;
   }>;
 }
 
+interface DualSentimentData {
+  current: SentimentData;
+  rolling: {
+    overall: {
+      sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+      score: number;
+      confidenceScores: {
+        positive: number;
+        negative: number;
+        neutral: number;
+      };
+    };
+    allSentences: Array<{
+      text: string;
+      sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+      confidenceScores: {
+        positive: number;
+        negative: number;
+        neutral: number;
+      };
+      opinions?: any[];
+      timestamp: number;
+    }>;
+  };
+}
+
 interface SentimentGaugeProps {
-  sentimentData: SentimentData;
+  sentimentData: DualSentimentData;
   className?: string;
 }
 
@@ -31,8 +59,17 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
   sentimentData, 
   className = '' 
 }) => {
+  const [showRolling, setShowRolling] = useState(false);
+  
+  // Get the appropriate sentiment data based on toggle
+  const currentData = showRolling ? 
+    {
+      overall: sentimentData.rolling.overall,
+      sentences: sentimentData.rolling.allSentences
+    } : sentimentData.current;
+
   // Handle case where sentiment data is not available or incomplete
-  if (!sentimentData || !sentimentData.overall) {
+  if (!currentData || !currentData.overall) {
     return (
       <div className={`sentiment-analysis-container ${className}`} style={{ 
         backgroundColor: 'var(--bg-card)',
@@ -41,14 +78,30 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
         padding: 'var(--spacing-lg)',
         textAlign: 'center'
       }}>
-        <h4 style={{ 
-          color: 'var(--text-primary)', 
-          marginBottom: 'var(--spacing-lg)',
-          fontSize: 'var(--font-size-lg)',
-          fontWeight: 'var(--font-weight-semibold)'
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: 'var(--spacing-md)'
         }}>
-          Sentiment Analysis
-        </h4>
+          <h4 style={{ 
+            color: 'var(--text-primary)', 
+            margin: 0,
+            fontSize: 'var(--font-size-lg)',
+            fontWeight: 'var(--font-weight-semibold)'
+          }}>
+            Sentiment Analysis
+          </h4>
+          <Toggle 
+            label={showRolling ? "Rolling Sentiment" : "Current Sentiment"}
+            checked={showRolling}
+            onChange={(_, checked) => setShowRolling(!!checked)}
+            styles={{
+              root: { marginBottom: 0 },
+              label: { color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }
+            }}
+          />
+        </div>
         <div style={{ color: 'var(--text-secondary)' }}>
           No sentiment data available yet. Start a conversation to see analysis.
         </div>
@@ -56,7 +109,7 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
     );
   }
 
-  const { overall } = sentimentData;
+  const { overall } = currentData;
   
   // Calculate sentiment score on a scale of -1 to 1
   const sentimentScore = overall.confidenceScores.positive - overall.confidenceScores.negative;
@@ -158,14 +211,34 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
       padding: 'var(--spacing-lg)',
       textAlign: 'center'
     }}>
-      <h4 style={{ 
-        color: 'var(--text-primary)', 
-        marginBottom: 'var(--spacing-lg)',
-        fontSize: 'var(--font-size-lg)',
-        fontWeight: 'var(--font-weight-semibold)'
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: 'var(--spacing-lg)'
       }}>
-        Sentiment Analysis
-      </h4>
+        <h4 style={{ 
+          color: 'var(--text-primary)', 
+          margin: 0,
+          fontSize: 'var(--font-size-lg)',
+          fontWeight: 'var(--font-weight-semibold)'
+        }}>
+          Sentiment Analysis
+        </h4>
+        <Toggle 
+          label={showRolling ? "Rolling" : "Current"}
+          checked={showRolling}
+          onChange={(_, checked) => setShowRolling(!!checked)}
+          styles={{
+            root: { marginBottom: 0 },
+            label: { 
+              color: 'var(--text-secondary)', 
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 'var(--font-weight-medium)'
+            }
+          }}
+        />
+      </div>
       
       <GaugeChart />
       
@@ -221,7 +294,7 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
       </div>
 
       {/* Sentence-level sentiment (if available) */}
-      {sentimentData.sentences && sentimentData.sentences.length > 0 && (
+      {currentData.sentences && currentData.sentences.length > 0 && (
         <div style={{ marginTop: 'var(--spacing-lg)' }}>
           <h5 style={{ 
             color: 'var(--text-primary)',
@@ -229,14 +302,17 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
             fontWeight: 'var(--font-weight-semibold)',
             marginBottom: 'var(--spacing-md)'
           }}>
-            Sentence-level Analysis
+            {showRolling ? `All Sentences (${currentData.sentences.length} total)` : 'Recent Sentences'}
           </h5>
           <div style={{ 
             maxHeight: '200px',
             overflowY: 'auto',
             textAlign: 'left'
           }}>
-            {sentimentData.sentences.slice(0, 5).map((sentence, index) => (
+            {(showRolling ? 
+              currentData.sentences.slice(-5).reverse() : // Show last 5 for rolling
+              currentData.sentences.slice(0, 5) // Show first 5 for current
+            ).map((sentence: any, index: number) => (
               <div
                 key={index}
                 style={{

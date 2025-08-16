@@ -1,7 +1,6 @@
 //App.tsx file content
 import React , { Component, RefObject } from 'react';
 import { Dropdown, IDropdownOption, PrimaryButton, DefaultButton, TextField, Panel, Text, Link, Pivot, PivotItem, Label } from '@fluentui/react';
-import { Container } from 'reactstrap';
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import { getKeyPhrases, getTokenOrRefresh, getGPTCustomPromptCompletion, gptLiveGuidance, generateRecommendation } from './api/backend_api_orchestrator.ts';
 import {getImageSasUrls, getGPTVInsights } from './api/backend_api_orchestrator.ts';
@@ -22,6 +21,7 @@ import { SentimentGauge } from './components/SentimentGauge';
 import { StatusBar } from './components/StatusBar';
 import { NotificationSystem, useNotifications } from './components/NotificationSystem';
 import { RecommendationPanel } from './components/RecommendationPanel';
+import { CombinedInsightsPanel } from './components/CombinedInsightsPanel';
 
 let recognizer: any;
 // Define an interface for the image object  
@@ -54,25 +54,51 @@ interface AppState {
     showTranscriptPanel: boolean;
     showPIIRedactedTranscript: boolean;
     sentimentData: {
-        overall: {
-            sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
-            score: number;
-            confidenceScores: {
-                positive: number;
-                negative: number;
-                neutral: number;
+        // Current/Latest sentiment from most recent utterance
+        current: {
+            overall: {
+                sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+                score: number;
+                confidenceScores: {
+                    positive: number;
+                    negative: number;
+                    neutral: number;
+                };
             };
+            sentences: Array<{
+                text: string;
+                sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+                confidenceScores: {
+                    positive: number;
+                    negative: number;
+                    neutral: number;
+                };
+                opinions?: any[];
+            }>;
         };
-        sentences: Array<{
-            text: string;
-            sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
-            confidenceScores: {
-                positive: number;
-                negative: number;
-                neutral: number;
+        // Rolling/Aggregated sentiment from entire conversation
+        rolling: {
+            overall: {
+                sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+                score: number;
+                confidenceScores: {
+                    positive: number;
+                    negative: number;
+                    neutral: number;
+                };
             };
-            opinions?: any[];
-        }>;
+            allSentences: Array<{
+                text: string;
+                sentiment: 'positive' | 'negative' | 'neutral' | 'mixed';
+                confidenceScores: {
+                    positive: number;
+                    negative: number;
+                    neutral: number;
+                };
+                opinions?: any[];
+                timestamp: number;
+            }>;
+        };
     };
     isRecording: boolean;
     isProcessing: boolean;
@@ -108,16 +134,30 @@ interface AppState {
         showTranscriptPanel: true,
         showPIIRedactedTranscript: true,
         sentimentData: {
-            overall: {
-                sentiment: 'neutral',
-                score: 0.5,
-                confidenceScores: {
-                    positive: 0.33,
-                    negative: 0.33,
-                    neutral: 0.34
-                }
+            current: {
+                overall: {
+                    sentiment: 'neutral',
+                    score: 0.5,
+                    confidenceScores: {
+                        positive: 0.33,
+                        negative: 0.33,
+                        neutral: 0.34
+                    }
+                },
+                sentences: []
             },
-            sentences: []
+            rolling: {
+                overall: {
+                    sentiment: 'neutral',
+                    score: 0.5,
+                    confidenceScores: {
+                        positive: 0.33,
+                        negative: 0.33,
+                        neutral: 0.34
+                    }
+                },
+                allSentences: []
+            }
         },
         isRecording: false,
         isProcessing: false,
@@ -242,7 +282,77 @@ interface AppState {
             
             // Update sentiment analysis if available
             if(nlpObj.sentimentAnalysis){
-                this.setState({ sentimentData: nlpObj.sentimentAnalysis });
+                // Update current sentiment from latest utterance
+                const currentSentiment = nlpObj.sentimentAnalysis;
+                
+                // Calculate rolling sentiment by accumulating all sentences
+                if (currentSentiment.sentences && currentSentiment.sentences.length > 0) {
+                    const newSentence = {
+                        ...currentSentiment.sentences[0], // Assuming single sentence for current utterance
+                        timestamp: Date.now()
+                    };
+                    
+                    const allSentences = [...this.state.sentimentData.rolling.allSentences, newSentence];
+                    
+                    // Calculate rolling overall sentiment from all sentences
+                    const totalPositive = allSentences.reduce((sum, s) => sum + s.confidenceScores.positive, 0);
+                    const totalNegative = allSentences.reduce((sum, s) => sum + s.confidenceScores.negative, 0);
+                    const totalNeutral = allSentences.reduce((sum, s) => sum + s.confidenceScores.neutral, 0);
+                    
+                    const avgPositive = totalPositive / allSentences.length;
+                    const avgNegative = totalNegative / allSentences.length;
+                    const avgNeutral = totalNeutral / allSentences.length;
+                    
+                    // Determine overall sentiment based on highest average
+                    let rollingSentiment: 'positive' | 'negative' | 'neutral' | 'mixed' = 'neutral';
+                    let rollingScore = avgNeutral;
+                    
+                    if (avgPositive > avgNegative && avgPositive > avgNeutral) {
+                        rollingSentiment = 'positive';
+                        rollingScore = avgPositive;
+                    } else if (avgNegative > avgPositive && avgNegative > avgNeutral) {
+                        rollingSentiment = 'negative';
+                        rollingScore = avgNegative;
+                    } else if (Math.abs(avgPositive - avgNegative) < 0.1) {
+                        rollingSentiment = 'mixed';
+                        rollingScore = (avgPositive + avgNegative) / 2;
+                    }
+                    
+                    this.setState({ 
+                        sentimentData: {
+                            current: currentSentiment,
+                            rolling: {
+                                overall: {
+                                    sentiment: rollingSentiment,
+                                    score: rollingScore,
+                                    confidenceScores: {
+                                        positive: avgPositive,
+                                        negative: avgNegative,
+                                        neutral: avgNeutral
+                                    }
+                                },
+                                allSentences
+                            }
+                        }
+                    });
+                } else {
+                    // If no sentences, just update current sentiment
+                    this.setState({ 
+                        sentimentData: {
+                            ...this.state.sentimentData,
+                            current: currentSentiment
+                        }
+                    });
+                }
+            }
+            
+            // Auto-generate recommendations every 4 transcript events with full context
+            // Use resultText to ensure we have the most current accumulated transcript
+            if(this.state.transcriptEventCount % 4 === 0 && this.state.copilotChecked && resultText.length > 150){
+                // Update state first to ensure generateInvestmentRecommendation has the latest transcript
+                setTimeout(() => {
+                    this.generateInvestmentRecommendation();
+                }, 100); // Small delay to ensure state is updated
             }
             
             if(this.state.transcriptEventCount % 2 === 0 && this.state.copilotChecked){
@@ -271,6 +381,8 @@ interface AppState {
       
       if(this.state.copilotChecked){
           this.gptLiveGuidance();
+          // Also generate final recommendation when recording stops
+          this.generateInvestmentRecommendation();
       }
   }
 
@@ -318,10 +430,18 @@ interface AppState {
   }
 
   async generateInvestmentRecommendation() {
+    // Prevent duplicate calls if already generating
+    if (this.state.isGeneratingRecommendation) {
+      return;
+    }
+    
     this.setState({ isGeneratingRecommendation: true });
     
     try {
+      // Always use the full accumulated transcript for recommendations (unlike key phrases which use individual utterances)
       const transcriptText = this.state.displayText;
+      
+      console.log(`Generating recommendation with full transcript (${transcriptText.length} chars):`, transcriptText.substring(0, 200) + '...');
       
       // Check if there's sufficient content for recommendation
       if (!transcriptText || transcriptText.length < 50 || transcriptText === 'Speak to your microphone or copy/paste conversation transcript here') {
@@ -402,92 +522,133 @@ interface AppState {
 
   render() {   
     return (
-        <Container className="app-container" style={{ paddingBottom: '80px' }}>
-          {/* Theme Toggle Button */}
-          <ThemeToggle />
-          
+        <div className="app-container" style={{ paddingBottom: '80px' }}>
           {/* Modern Header */}
           <div className="modern-card bounce-in">
-            <div className="modern-card-header">
-              <h3 style={{ margin: 0, textAlign: 'center' }}>
+            <div className="modern-card-header compact-header" style={{ 
+              padding: 'var(--spacing-md)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              {/* Left side - Title and status */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                <h3 style={{ 
+                  margin: 0, 
+                  fontSize: 'var(--font-size-lg)',
+                  lineHeight: 1.2
+                }}>
+                  {this.state.isRecording && (
+                    <span style={{ 
+                      display: 'inline-block', 
+                      width: '10px', 
+                      height: '10px', 
+                      backgroundColor: '#ff4444', 
+                      borderRadius: '50%', 
+                      marginRight: '6px',
+                      animation: 'pulse 1.5s infinite'
+                    }}></span>
+                  )}
+                  🤖 AI Investment Agent - Conversation Copilot
+                </h3>
                 {this.state.isRecording && (
-                  <span style={{ 
-                    display: 'inline-block', 
-                    width: '12px', 
-                    height: '12px', 
-                    backgroundColor: '#ff4444', 
-                    borderRadius: '50%', 
-                    marginRight: '8px',
+                  <span style={{
+                    fontSize: 'var(--font-size-xs)',
+                    color: '#ff4444',
+                    fontWeight: 600,
                     animation: 'pulse 1.5s infinite'
-                  }}></span>
+                  }}>
+                    LIVE
+                  </span>
                 )}
-                🤖 AI Investment Agent - Conversation Copilot
-              </h3>
+              </div>
+
+              {/* Right side - All controls */}
+              <div style={{ 
+                display: 'flex', 
+                gap: 'var(--spacing-sm)', 
+                alignItems: 'center' 
+              }}>
+                {/* Recording Controls */}
+                <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+                  <ModernIconButton
+                    icon={
+                      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 1a3 3 0 0 0-3 3v3a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM6 4a2 2 0 1 1 4 0v3a2 2 0 1 1-4 0V4z"/>
+                        <path d="M4 9.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1H4.5a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M8 13.5a4.5 4.5 0 0 1-4.473-4H2.5a.5.5 0 0 1 0-1h1.027a4.5 4.5 0 0 1 8.946 0H13.5a.5.5 0 0 1 0 1h-1.027A4.5 4.5 0 0 1 8 13.5z"/>
+                      </svg>
+                    }
+                    onClick={() => this.sttFromMic()}
+                    title={this.state.isRecording ? 'Recording...' : 'Start Conversation'}
+                    variant="primary"
+                    disabled={this.state.isRecording}
+                  />
+                  
+                  <ModernIconButton
+                    icon={
+                      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <rect x="5" y="6" width="6" height="4" rx="1"/>
+                      </svg>
+                    }
+                    onClick={() => this.stopRecording()}
+                    title="End Conversation"
+                    variant="danger"
+                    disabled={!this.state.isRecording}
+                  />
+                </div>
+
+                {/* Separator */}
+                <div style={{ 
+                  width: '1px', 
+                  height: '24px', 
+                  backgroundColor: 'var(--border-color)', 
+                  opacity: 0.5 
+                }} />
+
+                {/* App Controls */}
+                <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+                  <ModernIconButton
+                    icon={
+                      <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+                        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
+                      </svg>
+                    }
+                    onClick={this.openSettingsPanel}
+                    title="Settings"
+                    variant="secondary"
+                  />
+                  
+                  <ModernIconButton
+                    icon={<Delete24Regular />}
+                    onClick={this.onClearAllTextarea}
+                    title="Clear all text areas"
+                    variant="secondary"
+                  />
+
+                  <ThemeToggle variant="inline" />
+                </div>
+              </div>
+            </div>
+
+            {/* Status description - moved below header */}
+            <div style={{ 
+              padding: '0 var(--spacing-md) var(--spacing-sm) var(--spacing-md)',
+              textAlign: 'center'
+            }}>
               <p style={{ 
-                margin: 'var(--spacing-sm) 0 0 0', 
-                fontSize: 'var(--font-size-sm)', 
+                margin: 0, 
+                fontSize: 'var(--font-size-xs)', 
                 opacity: 0.9,
-                textAlign: 'center'
+                lineHeight: 1.3
               }}>
                 {this.state.isRecording 
                   ? '🎤 Recording conversation - AI analysis in progress...' 
                   : 'Multimodal AI-powered conversation analysis and real-time guidance'
                 }
               </p>
-            </div>
-            
-            {/* Control Buttons */}
-            <div className="modern-button-group">
-              <ModernButton 
-                onClick={() => this.sttFromMic()}
-                variant="primary"
-                icon={
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 1a3 3 0 0 0-3 3v3a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zM6 4a2 2 0 1 1 4 0v3a2 2 0 1 1-4 0V4z"/>
-                    <path d="M4 9.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1H4.5a.5.5 0 0 1-.5-.5z"/>
-                    <path d="M8 13.5a4.5 4.5 0 0 1-4.473-4H2.5a.5.5 0 0 1 0-1h1.027a4.5 4.5 0 0 1 8.946 0H13.5a.5.5 0 0 1 0 1h-1.027A4.5 4.5 0 0 1 8 13.5z"/>
-                  </svg>
-                }
-                loading={this.state.connectionStatus === 'connecting'}
-                disabled={this.state.isRecording}
-              >
-                {this.state.isRecording ? 'Recording...' : 'Start Conversation'}
-              </ModernButton>
-              
-              <ModernButton 
-                onClick={() => this.stopRecording()}
-                variant="danger"
-                icon={
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                    <rect x="5" y="6" width="6" height="4" rx="1"/>
-                  </svg>
-                }
-                disabled={!this.state.isRecording}
-                loading={this.state.isProcessing && this.state.isRecording}
-              >
-                {this.state.isRecording ? 'End Conversation' : 'End Conversation'}
-              </ModernButton>
-              
-              <ModernButton 
-                onClick={this.openSettingsPanel}
-                variant="secondary"
-                icon={
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
-                    <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319z"/>
-                  </svg>
-                }
-              >
-                Settings
-              </ModernButton>
-              
-              <ModernIconButton
-                icon={<Delete24Regular />}
-                onClick={this.onClearAllTextarea}
-                title="Clear all text areas"
-                variant="secondary"
-              />
             </div>
           </div>
 
@@ -548,7 +709,7 @@ interface AppState {
 
           {/* Transcript Section */}
           {this.state.showTranscriptPanel && (
-            <div className="modern-grid modern-grid-3">
+            <div className="modern-grid modern-grid-2">
               <ModernPivotSection
                 title="Conversation Transcripts"
                 items={[
@@ -579,26 +740,11 @@ interface AppState {
                 ]}
               />
               
-              <ModernPivotSection
-                title="Language AI Insights"
-                items={[{
-                  key: 'entities',
-                  headerText: 'Entities Extracted',
-                  content: (
-                    <ModernTextArea
-                      id="entitiesTextarea"
-                      defaultValue={this.state.displayNLPOutput}
-                      rows={10}
-                      readOnly
-                    />
-                  )
-                }]}
+              {/* Combined Language AI Insights & Sentiment Analysis */}
+              <CombinedInsightsPanel
+                entitiesExtracted={this.state.displayNLPOutput}
+                sentimentData={this.state.sentimentData}
               />
-
-              {/* Sentiment Analysis Gauge */}
-              <ModernSection title="Sentiment Analysis">
-                <SentimentGauge sentimentData={this.state.sentimentData} />
-              </ModernSection>
             </div>
           )}
 
@@ -757,7 +903,7 @@ interface AppState {
             isProcessing={this.state.isProcessing}
             transcriptCount={this.state.transcriptEventCount}
           />
-    </Container>
+    </div>
     );
   }//end of render method
 }//end of App class
