@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Text, Panel, PanelType } from '@fluentui/react';
 import { ModernButton, ModernIconButton } from './ModernButton';
 import { useTheme } from '../contexts/ThemeContext';
+import { markdownToHtml } from '../utils/markdown';
 import {
   Alert24Regular,
   Alert24Filled,
@@ -36,6 +37,7 @@ export const SmartNotificationHeader: React.FC<SmartNotificationHeaderProps> = (
   onViewRecommendation
 }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const { isDark, theme } = useTheme();
 
   // no inline panel styles; themed via CSS classes in modern-theme.css
@@ -68,7 +70,19 @@ export const SmartNotificationHeader: React.FC<SmartNotificationHeaderProps> = (
 
   const getPreviewText = (content: string) => {
     const cleanContent = content.replace(/[#*•\-]/g, '').trim();
-    return cleanContent.length > 80 ? cleanContent.substring(0, 80) + '...' : cleanContent;
+    return cleanContent.length > 140 ? cleanContent.substring(0, 140) + '...' : cleanContent;
+  };
+
+  const toggleExpanded = (id: string) => {
+    setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // no-op
+    }
   };
 
   return (
@@ -176,8 +190,24 @@ export const SmartNotificationHeader: React.FC<SmartNotificationHeaderProps> = (
                         <Text variant="medium" className="notification-preview">
                           {getPreviewText(alert.content)}
                         </Text>
+
+                        {expanded[alert.id] && (
+                          <div className="notification-details">
+                            {/* Render full recommendation with minimal Markdown support */}
+                            <div
+                              className="recommendation-markdown"
+                              dangerouslySetInnerHTML={{ __html: markdownToHtml(alert.content) }}
+                            />
+                          </div>
+                        )}
                         
                         <div className="notification-actions">
+                          <button
+                            className="expand-toggle-btn"
+                            onClick={() => toggleExpanded(alert.id)}
+                          >
+                            <span>{expanded[alert.id] ? 'Hide Details' : 'Show Full Recommendation'}</span>
+                          </button>
                           <button
                             className="view-recommendation-btn"
                             onClick={() => {
@@ -188,6 +218,13 @@ export const SmartNotificationHeader: React.FC<SmartNotificationHeaderProps> = (
                           >
                             <span>View Full Recommendation</span>
                             <ChevronRight24Regular className="icon-sm" />
+                          </button>
+                          <button
+                            className="copy-recommendation-btn"
+                            onClick={() => copyToClipboard(alert.content)}
+                            title="Copy to clipboard"
+                          >
+                            Copy
                           </button>
                           {!alert.isRead && (
                             <button

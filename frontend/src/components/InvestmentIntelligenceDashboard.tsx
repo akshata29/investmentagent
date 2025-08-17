@@ -1252,7 +1252,7 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
   .ultra-compact .insights-legend { display: none; }
       `}</style>
 
-      <div className="dashboard-header">
+      {/* <div className="dashboard-header">
         <div className="header-left">
           <DataTrending24Regular style={{ color: 'var(--accent-blue)', fontSize: '24px' }} />
           <div>
@@ -1328,7 +1328,7 @@ export const InvestmentIntelligenceDashboard: React.FC<InvestmentIntelligenceDas
             </div>
           </div>
         ))}
-      </div>
+      </div> */}
 
       <div className="insights-section">
         <div className="insights-header">

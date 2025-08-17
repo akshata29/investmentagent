@@ -67,7 +67,6 @@ export const generateClientPitch = (params: {
 
   return `
 # Investment Recommendation Presentation
-**Prepared for:** ${nameForHeader}  
 **Date:** ${currentDate}  
 **Advisor:** AI Investment Copilot  
 

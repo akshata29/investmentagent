@@ -225,7 +225,7 @@ router.post('/gptv/imageinsights', async (req, res) => {
 //Post operation /gpt/recommendation - Generate investment recommendations  
 router.post('/gpt/recommendation', async (req, res) => {
     try {
-        const conversation_transcript = req.body.transcript;
+    let conversation_transcript = req.body.transcript;
         
         // Input validation
         if (!conversation_transcript) {
@@ -252,7 +252,16 @@ router.post('/gpt/recommendation', async (req, res) => {
             });
         }
         
-        console.log(`Generating recommendations with FULL transcript (${conversation_transcript.length} characters)`);
+        // Heuristic guardrail: trim excessively long transcripts to avoid Azure OpenAI 400 (context_length_exceeded)
+        // Rough token estimate: ~3.5 chars per token. Keep ~6,000 prompt tokens (~21k chars) to be conservative across SKUs.
+        const MAX_PROMPT_TOKENS = 6000;
+        const MAX_PROMPT_CHARS = Math.floor(MAX_PROMPT_TOKENS * 3.5);
+        if (conversation_transcript.length > MAX_PROMPT_CHARS) {
+            // keep the most recent part of the conversation
+            conversation_transcript = conversation_transcript.slice(-MAX_PROMPT_CHARS);
+        }
+
+        console.log(`Generating recommendations with transcript (${conversation_transcript.length} characters)`);
         
         // Check if Azure OpenAI configuration is available
         if (!aoai_chatgpt_4_endpoint || !aoai_chatgpt_4_deployment_name || !aoai_chatgpt_4_api_version || !aoai_chatgpt_4_key) {
@@ -316,21 +325,23 @@ If sufficient information is available, provide 4 concise bullet points recommen
             temperature: 0.3
         }
         
-        const chatcompletionResponse = await axios.post(url, params, {headers: headers});
+    const chatcompletionResponse = await axios.post(url, params, {headers: headers});
         res.send(chatcompletionResponse.data.choices[0]); 
         var endtime = new Date() - starttime;         
         // writeData(req.body.transcript, "investment-recommendation", chatcompletionResponse.data.choices[0], req.ip, "recommendation-generation", endtime);
     }catch(error){
-        console.error('ERROR WITH RECOMMENDATION GENERATION:', error);
+        console.error('ERROR WITH RECOMMENDATION GENERATION:', error?.message || error);
         
         // Enhanced error handling with status codes
         if (error.response) {
             const statusCode = error.response.status;
             let errorMessage = 'Error generating recommendation: ';
+            const providerMsg = error.response.data?.error?.message;
             
             switch (statusCode) {
                 case 400:
-                    errorMessage += 'Invalid request format or parameters';
+                    // Surface provider message when available (e.g., context_length_exceeded)
+                    errorMessage += providerMsg || 'Invalid request format or parameters';
                     break;
                 case 401:
                     errorMessage += 'Authentication failed';
@@ -381,7 +392,7 @@ If sufficient information is available, provide 4 concise bullet points recommen
 //Post operation /gpt/marketinsights - Generate market analysis and insights  
 router.post('/gpt/marketinsights', async (req, res) => {
     try {
-        const conversation_transcript = req.body.transcript;
+    let conversation_transcript = req.body.transcript;
         
         // Input validation
         if (!conversation_transcript) {
@@ -408,7 +419,14 @@ router.post('/gpt/marketinsights', async (req, res) => {
             });
         }
         
-        console.log(`Generating market insights with FULL transcript (${conversation_transcript.length} characters)`);
+        // Heuristic guardrail: trim excessively long transcripts to avoid Azure OpenAI 400 (context_length_exceeded)
+        const MAX_PROMPT_TOKENS = 5000; // slightly smaller than recommendation
+        const MAX_PROMPT_CHARS = Math.floor(MAX_PROMPT_TOKENS * 3.5);
+        if (conversation_transcript.length > MAX_PROMPT_CHARS) {
+            conversation_transcript = conversation_transcript.slice(-MAX_PROMPT_CHARS);
+        }
+
+        console.log(`Generating market insights with transcript (${conversation_transcript.length} characters)`);
         
         // Check if Azure OpenAI configuration is available
         if (!aoai_chatgpt_4_endpoint || !aoai_chatgpt_4_deployment_name || !aoai_chatgpt_4_api_version || !aoai_chatgpt_4_key) {
@@ -468,7 +486,7 @@ Provide 4-6 concise bullet points with current market insights that would be mos
             presence_penalty: 0
         };
         
-        const response = await axios.post(url, data, { headers });
+    const response = await axios.post(url, data, { headers });
         
         var endtime = new Date();
         var elapsedtime = endtime - starttime;
@@ -499,13 +517,13 @@ Provide 4-6 concise bullet points with current market insights that would be mos
         }
         
     } catch (error) {
-        console.error('Error generating market insights:', error.message);
+        console.error('Error generating market insights:', error?.message || error);
         
         if (error.response) {
-            console.error('Azure OpenAI API Error:', error.response.status, error.response.data);
+        console.error('Azure OpenAI API Error:', error.response.status, error.response.data);
             res.status(error.response.status).send({
                 message: { 
-                    content: `Error generating market insights: ${error.response.data?.error?.message || 'API Error'}`,
+            content: `Error generating market insights: ${error.response.data?.error?.message || 'API Error'}`,
                     error_type: 'api_error'
                 }
             });
