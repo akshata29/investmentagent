@@ -59,32 +59,11 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
   const renderTaskCard = (task: TaskItem, index: number) => (
     <div
       key={task.id}
-      className={`kanban-card ${task.status}`}
-      style={{
-        backgroundColor: 'var(--bg-card)',
-        border: `2px solid ${task.status === 'completed' ? 'var(--accent-green)' : 'var(--accent-orange)'}`,
-        borderRadius: 'var(--radius-md)',
-        padding: compactView ? 'var(--spacing-sm)' : 'var(--spacing-md)',
-        marginBottom: 'var(--spacing-sm)',
-        boxShadow: 'var(--shadow-sm)',
-        transition: 'all 0.3s ease',
-        cursor: 'default',
-        position: 'relative',
-        animation: `cardSlideIn 0.3s ease-out ${index * 0.1}s both`
-      }}
+      className={`kanban-card ${task.status} ${compactView ? 'compact' : ''}`}
+      style={{ animationDelay: `${index * 0.1}s` }}
     >
       {/* Task Priority Indicator */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '8px',
-          right: '8px',
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          backgroundColor: task.status === 'completed' ? 'var(--accent-green)' : 'var(--accent-orange)'
-        }}
-      />
+      <div className="kanban-priority-dot" />
 
       {/* Task Content */}
       <div style={{ paddingRight: '16px' }}>
@@ -104,21 +83,10 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
 
         {/* Answer Section */}
         {task.answer && !compactView && (
-          <div
-            style={{
-              marginTop: 'var(--spacing-sm)',
-              padding: 'var(--spacing-sm)',
-              backgroundColor: task.status === 'completed' ? 'var(--bg-success)' : 'var(--bg-warning)',
-              borderRadius: 'var(--radius-sm)',
-              borderLeft: `3px solid ${task.status === 'completed' ? 'var(--accent-green)' : 'var(--accent-orange)'}`
-            }}
-          >
+          <div className="kanban-answer">
             <Text
               variant="small"
-              style={{
-                color: 'var(--text-secondary)',
-                fontStyle: 'italic'
-              }}
+              className="kanban-answer-text"
             >
               💡 {task.answer}
             </Text>
@@ -129,11 +97,7 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
         {task.answer && compactView && (
           <Text
             variant="tiny"
-            style={{
-              color: 'var(--text-secondary)',
-              marginTop: '2px',
-              display: 'block'
-            }}
+            className="kanban-answer-preview"
           >
             ✓ Answer provided
           </Text>
@@ -141,81 +105,29 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
       </div>
 
       {/* Status Badge */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '8px',
-          right: '8px',
-          padding: '2px 6px',
-          borderRadius: '12px',
-          backgroundColor: task.status === 'completed' ? 'var(--accent-green)' : 'var(--accent-orange)',
-          color: 'white',
-          fontSize: '10px',
-          fontWeight: 'bold'
-        }}
-      >
+      <div className="kanban-status-badge">
         {task.status === 'completed' ? '✓' : '⏳'}
       </div>
     </div>
   );
 
-  const renderColumn = (title: string, tasks: TaskItem[], icon: React.ReactNode, color: string) => (
-    <div className="kanban-column" style={{ flex: 1, minWidth: '250px' }}>
+  const renderColumn = (title: string, tasks: TaskItem[], icon: React.ReactNode, kind: 'pending' | 'completed') => (
+    <div className={`kanban-column ${kind}`}>
       {/* Column Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--spacing-sm)',
-          padding: 'var(--spacing-md)',
-          backgroundColor: color,
-          color: 'white',
-          borderRadius: 'var(--radius-md)',
-          marginBottom: 'var(--spacing-md)',
-          fontWeight: 'var(--font-weight-semibold)'
-        }}
-      >
+      <div className="kanban-column-header">
         {icon}
-        <Text variant="medium" style={{ color: 'white', fontWeight: 'var(--font-weight-semibold)' }}>
+        <Text variant="medium" className="kanban-column-title">
           {title}
         </Text>
-        <div
-          style={{
-            marginLeft: 'auto',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            borderRadius: '12px',
-            padding: '2px 8px',
-            fontSize: '12px',
-            fontWeight: 'bold'
-          }}
-        >
+        <div className="kanban-column-count">
           {tasks.length}
         </div>
       </div>
 
       {/* Column Content */}
-      <div
-        className="kanban-column-content"
-        style={{
-          minHeight: '300px',
-          maxHeight: '400px',
-          overflowY: 'auto',
-          padding: 'var(--spacing-sm)',
-          backgroundColor: 'var(--bg-secondary)',
-          borderRadius: 'var(--radius-md)',
-          border: `2px dashed ${color}`,
-          opacity: 0.9
-        }}
-      >
+      <div className="kanban-column-content">
         {tasks.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              color: 'var(--text-secondary)',
-              padding: 'var(--spacing-xl)',
-              fontSize: '14px'
-            }}
-          >
+          <div className="kanban-empty">
             <div style={{ fontSize: '32px', marginBottom: 'var(--spacing-sm)' }}>
               {title.includes('Pending') ? '⏰' : '🎉'}
             </div>
@@ -243,15 +155,7 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
 
           {/* Middle: View Mode Buttons */}
           {onViewModeChange && (
-            <div style={{ 
-              display: 'flex',
-              gap: 'var(--spacing-xs)',
-              backgroundColor: 'var(--bg-secondary)',
-              padding: 'var(--spacing-xs)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-primary)',
-              boxShadow: 'var(--shadow-sm)'
-            }}>
+            <div className="segmented-control">
               {[
                 { key: 'unified', label: '🎯', title: 'Unified View' },
                 { key: 'progress', label: '📊', title: 'Progress View' },
@@ -262,20 +166,7 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
                   key={mode.key}
                   onClick={() => onViewModeChange(mode.key as any)}
                   title={mode.title}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: 'none',
-                    backgroundColor: currentViewMode === mode.key ? 'var(--color-primary)' : 'transparent',
-                    color: currentViewMode === mode.key ? 'var(--text-on-primary)' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
+                  className={`segmented-btn ${currentViewMode === mode.key ? 'active' : ''}`}
                 >
                   <span style={{ fontSize: '16px' }}>{mode.label}</span>
                   <span style={{ fontSize: '11px' }}>{mode.title.split(' ')[0]}</span>
@@ -287,36 +178,14 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
           {/* Right side: Progress Overview and Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
             {/* Progress Overview */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-sm)',
-              padding: 'var(--spacing-sm)',
-              backgroundColor: 'var(--bg-secondary)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-primary)'
-            }}>
+            <div className="kanban-progress">
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div
-                  style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--accent-green)'
-                  }}
-                />
+                <div className="kanban-dot green" />
                 <Text variant="small">{completedCount}</Text>
               </div>
-              <ArrowRight20Regular style={{ color: 'var(--text-secondary)', fontSize: '12px' }} />
+              <span className="kanban-progress-sep"><ArrowRight20Regular /></span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <div
-                  style={{
-                    width: '12px',
-                    height: '12px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--accent-orange)'
-                  }}
-                />
+                <div className="kanban-dot orange" />
                 <Text variant="small">{pendingTasksData.length}</Text>
               </div>
               <Text variant="small" style={{ color: 'var(--text-secondary)' }}>
@@ -325,19 +194,7 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
             </div>
 
             {/* View Toggle */}
-            <button
-              onClick={() => setCompactView(!compactView)}
-              style={{
-                padding: '4px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-primary)',
-                backgroundColor: 'var(--bg-secondary)',
-                color: 'var(--text-primary)',
-                fontSize: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
+            <button onClick={() => setCompactView(!compactView)} className="btn btn-secondary">
               {compactView ? '📖 Detailed' : '📋 Compact'}
             </button>
 
@@ -357,16 +214,7 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
       <div className="modern-section-content">
       <div className="kanban-container">
         {totalTasks === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: 'var(--spacing-xl)',
-              color: 'var(--text-secondary)',
-              backgroundColor: 'var(--bg-secondary)',
-              borderRadius: 'var(--radius-lg)',
-              border: '2px dashed var(--border-primary)'
-            }}
-          >
+          <div className="kanban-empty">
             <div style={{ fontSize: '48px', marginBottom: 'var(--spacing-md)' }}>📋</div>
             <Text variant="mediumPlus" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
               Live Guidance Board Ready
@@ -376,20 +224,13 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
             </Text>
           </div>
         ) : (
-          <div
-            style={{
-              display: 'flex',
-              gap: 'var(--spacing-lg)',
-              alignItems: 'flex-start',
-              minHeight: '400px'
-            }}
-          >
+          <div className="kanban-grid">
             {/* Pending Tasks Column */}
             {renderColumn(
               'Pending Tasks',
               pendingTasksData,
               <Clock20Regular />,
-              'var(--accent-orange)'
+              'pending'
             )}
 
             {/* Completed Tasks Column */}
@@ -397,67 +238,11 @@ export const KanbanLiveGuidancePanel: React.FC<KanbanLiveGuidancePanelProps> = (
               'Completed Tasks',
               completedTasksData,
               <CheckmarkCircle20Regular />,
-              'var(--accent-green)'
+              'completed'
             )}
           </div>
         )}
       </div>
-
-      <style>{`
-        .kanban-card:hover {
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-md);
-        }
-
-        .kanban-column-content::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .kanban-column-content::-webkit-scrollbar-track {
-          background: var(--bg-tertiary);
-          border-radius: 3px;
-        }
-
-        .kanban-column-content::-webkit-scrollbar-thumb {
-          background: var(--border-primary);
-          border-radius: 3px;
-        }
-
-        .kanban-processing-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background-color: var(--accent-blue);
-          animation: kanbanPulse 1.5s infinite;
-        }
-
-        @keyframes cardSlideIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9) translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-
-        @keyframes kanbanPulse {
-          0% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.2); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-
-        @media (max-width: 768px) {
-          .kanban-container > div:last-child {
-            flex-direction: column;
-          }
-          
-          .kanban-column {
-            min-width: 100%;
-          }
-        }
-      `}</style>
       </div>
     </div>
   );

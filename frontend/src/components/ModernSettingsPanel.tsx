@@ -9,6 +9,7 @@ import {
   Toggle,
   Text
 } from '@fluentui/react';
+import { Checkmark24Regular } from '@fluentui/react-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { ModernButton } from './ModernButton';
 import SpokenLanguageOptions from '../AppSettings';
@@ -79,25 +80,7 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
 }) => {
   const { isDark, theme } = useTheme();
 
-  // Modern panel styles that work with themes
-  const panelStyles = {
-    main: {
-      backgroundColor: 'var(--bg-panel)',
-      color: 'var(--text-primary)',
-    },
-    content: {
-      padding: 0, // We'll handle padding ourselves
-      backgroundColor: 'var(--bg-panel)',
-    },
-    header: {
-      backgroundColor: 'var(--color-primary)',
-      color: 'var(--text-on-primary)',
-      borderBottom: `2px solid var(--border-primary)`,
-    },
-    scrollableContent: {
-      backgroundColor: 'var(--bg-panel)',
-    }
-  };
+  // CSS driven panel theming; no inline styles
 
   // Modern component styles
   const dropdownStyles = {
@@ -145,7 +128,7 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
       fontSize: 'var(--font-size-base)',
     },
     thumb: {
-      backgroundColor: isDark ? '#ffffff' : '#000000',
+  backgroundColor: isDark ? 'var(--text-inverse)' : 'var(--text-primary)',
     }
   };
 
@@ -166,61 +149,13 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
       type={PanelType.medium}
       hasCloseButton={false}
       onRenderHeader={() => (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '16px 24px',
-          backgroundColor: 'var(--color-primary)',
-          color: 'var(--text-on-primary)',
-          borderBottom: '2px solid var(--border-primary)',
-          minHeight: '60px'
-        }}>
-          <Text variant="large" style={{ 
-            color: 'var(--text-on-primary)', 
-            fontWeight: '600',
-            fontSize: 'var(--font-size-lg)'
-          }}>
+        <div className="notification-panel-header">
+          <Text variant="large" className="notification-header-title">
             ⚙️ Application Settings
           </Text>
           <button
             onClick={onDismiss}
-            style={{
-              background: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.9)',
-              border: isDark ? '2px solid #ffffff' : '2px solid #333333',
-              borderRadius: '8px',
-              width: '40px',
-              height: '40px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: isDark ? '#ffffff' : '#000000',
-              boxShadow: isDark ? '0 2px 8px rgba(255,255,255,0.2)' : '0 2px 8px rgba(0,0,0,0.3)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              if (isDark) {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
-                e.currentTarget.style.borderColor = '#ffffff';
-              } else {
-                e.currentTarget.style.background = '#ffffff';
-                e.currentTarget.style.borderColor = '#333333';
-              }
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              if (isDark) {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.borderColor = '#ffffff';
-              } else {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
-                e.currentTarget.style.borderColor = '#333333';
-              }
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
+            className={`notification-close-btn ${isDark ? 'dark' : 'light'}`}
             title="Close settings"
             aria-label="Close"
           >
@@ -228,8 +163,7 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
           </button>
         </div>
       )}
-      styles={panelStyles}
-      className="modern-panel slide-in"
+      className="modern-panel notification-panel slide-in"
     >
       <div className="settings-panel-content">
         
@@ -467,11 +401,9 @@ export const ModernSettingsPanel: React.FC<ModernSettingsPanelProps> = ({
           <ModernButton
             onClick={onDismiss}
             variant="primary"
+            className="settings-save-btn"
             icon={
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-              </svg>
+              <Checkmark24Regular />
             }
           >
             Save & Close Settings

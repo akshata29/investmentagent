@@ -20,17 +20,17 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       case 'connected':
         return (
           <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-            <circle cx="6" cy="6" r="6" fill="#10b981"/>
+            <circle cx="6" cy="6" r="6" fill="var(--accent-green)"/>
           </svg>
         );
       case 'connecting':
         return (
-          <div className="loading-dot" style={{ width: '12px', height: '12px', background: '#f59e0b' }} />
+          <div className="loading-dot" style={{ width: '12px', height: '12px', background: 'var(--accent-orange)' }} />
         );
       default:
         return (
           <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-            <circle cx="6" cy="6" r="6" fill="#ef4444"/>
+            <circle cx="6" cy="6" r="6" fill="var(--accent-red)"/>
           </svg>
         );
     }
@@ -40,8 +40,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     if (isRecording) {
       return (
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-          <circle cx="8" cy="8" r="4" fill="#ef4444"/>
-          <circle cx="8" cy="8" r="4" fill="#ef4444" opacity="0.3">
+          <circle cx="8" cy="8" r="4" fill="var(--accent-red)"/>
+          <circle cx="8" cy="8" r="4" fill="var(--accent-red)" opacity="0.3">
             <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite"/>
             <animate attributeName="opacity" values="0.3;0;0.3" dur="1s" repeatCount="indefinite"/>
           </circle>
@@ -50,7 +50,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
     }
     return (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-        <circle cx="8" cy="8" r="4" fill="#64748b"/>
+  <circle cx="8" cy="8" r="4" fill="var(--color-secondary)"/>
       </svg>
     );
   };

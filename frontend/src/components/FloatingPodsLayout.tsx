@@ -40,36 +40,7 @@ const FloatingPod: React.FC<{
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const podRef = useRef<HTMLDivElement>(null);
 
-  const getPriorityStyles = () => {
-    switch (priority) {
-      case 'primary':
-        return {
-          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-          headerColor: 'white',
-          shadow: '0 20px 40px rgba(59, 130, 246, 0.3)',
-          border: '2px solid #3b82f6',
-          opacity: 1
-        };
-      case 'secondary':
-        return {
-          background: 'var(--bg-card)',
-          headerColor: 'var(--text-primary)',
-          shadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-          border: '1px solid var(--border-primary)',
-          opacity: 0.95
-        };
-      case 'minimal':
-        return {
-          background: 'rgba(255, 255, 255, 0.8)',
-          headerColor: 'var(--text-secondary)',
-          shadow: '0 5px 15px rgba(0, 0, 0, 0.05)',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
-          opacity: 0.9
-        };
-    }
-  };
-
-  const styles = getPriorityStyles();
+  const headerTextClass = priority === 'primary' ? 'text-on-primary' : priority === 'secondary' ? 'text-primary' : 'text-secondary';
   const minimizedSize = { width: 60, height: 60 };
   const currentSize = isMinimized ? { ...minimizedSize, x: position.x, y: position.y } : position;
 
@@ -109,75 +80,30 @@ const FloatingPod: React.FC<{
   return (
     <div
       ref={podRef}
-      style={{
-        position: 'absolute',
-        left: currentSize.x,
-        top: currentSize.y,
-        width: currentSize.width,
-        height: currentSize.height,
-        background: styles.background,
-        border: styles.border,
-        borderRadius: isMinimized ? '50%' : '16px',
-        boxShadow: styles.shadow,
-        opacity: styles.opacity,
-        cursor: isLocked ? 'default' : 'move',
-        userSelect: 'none',
-        transition: isDragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        zIndex: priority === 'primary' ? 1000 : priority === 'secondary' ? 900 : 800,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        backdropFilter: 'blur(10px)'
-      }}
+      className={`floating-pod ${priority}${isMinimized ? ' minimized' : ''}${isDragging ? ' dragging' : ''}${isLocked ? ' locked' : ''}`}
+      style={{ left: currentSize.x, top: currentSize.y, width: currentSize.width, height: currentSize.height, zIndex: priority === 'primary' ? 1000 : priority === 'secondary' ? 900 : 800 }}
       onMouseDown={handleMouseDown}
     >
       {/* Pod Header */}
-      <div style={{
-        background: priority === 'primary' ? 'rgba(255,255,255,0.1)' : 'var(--bg-header)',
-        color: styles.headerColor,
-        padding: isMinimized ? '0' : '8px 12px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        minHeight: isMinimized ? '60px' : '40px',
-        borderRadius: isMinimized ? '50%' : '0',
-        position: 'relative'
-      }}>
+      <div className={`pod-header ${isMinimized ? 'minimized' : ''} ${priority}`}>
         {isMinimized ? (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            fontSize: '20px'
-          }}>
+          <div className="pod-minimized-icon">
             {icon}
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '16px' }}>{icon}</span>
-              <span style={{ 
-                fontSize: '12px', 
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}>
+            <div className="pod-header-left">
+              <span className="pod-icon">{icon}</span>
+              <span className={`pod-title ${headerTextClass}`}>
                 {title}
               </span>
             </div>
             
-            <div style={{ display: 'flex', gap: '4px' }}>
+            <div className="pod-actions">
               {metrics && (
-                <div style={{ display: 'flex', gap: '6px', marginRight: '8px' }}>
+                <div className="pod-metrics">
                   {metrics.map((metric, index) => (
-                    <div key={index} style={{
-                      background: 'rgba(255,255,255,0.2)',
-                      padding: '2px 6px',
-                      borderRadius: '8px',
-                      fontSize: '9px',
-                      fontWeight: 600
-                    }}>
+                    <div key={index} className="pod-metric-chip">
                       {metric.value}
                     </div>
                   ))}
@@ -185,37 +111,15 @@ const FloatingPod: React.FC<{
               )}
               
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onLock(id);
-                }}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '4px',
-                  color: styles.headerColor,
-                  cursor: 'pointer',
-                  fontSize: '10px'
-                }}
+                onClick={(e) => { e.stopPropagation(); onLock(id); }}
+                className="pod-btn"
               >
                 {isLocked ? '🔒' : '🔓'}
               </button>
               
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onMinimize(id);
-                }}
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '4px',
-                  color: styles.headerColor,
-                  cursor: 'pointer',
-                  fontSize: '10px'
-                }}
+                onClick={(e) => { e.stopPropagation(); onMinimize(id); }}
+                className="pod-btn"
               >
                 {isMinimized ? '🔍' : '➖'}
               </button>
@@ -226,14 +130,7 @@ const FloatingPod: React.FC<{
 
       {/* Pod Content */}
       {!isMinimized && (
-        <div style={{
-          flex: 1,
-          padding: '12px',
-          overflow: 'auto',
-          fontSize: '13px',
-          lineHeight: 1.4,
-          color: priority === 'primary' ? 'white' : 'var(--text-primary)'
-        }}>
+        <div className={`pod-content ${priority === 'primary' ? 'text-on-primary' : ''}`}>
           {children}
         </div>
       )}
@@ -245,34 +142,9 @@ const FloatingPod: React.FC<{
 const MagneticZone: React.FC<{
   zone: 'top' | 'bottom' | 'left' | 'right' | 'center';
   isActive: boolean;
-}> = ({ zone, isActive }) => {
-  const getZoneStyles = () => {
-    const base = {
-      position: 'absolute' as const,
-      background: isActive ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.1)',
-      border: '2px dashed #3b82f6',
-      borderRadius: '12px',
-      transition: 'all 0.2s ease',
-      opacity: isActive ? 1 : 0.5,
-      pointerEvents: 'none' as const
-    };
-
-    switch (zone) {
-      case 'top':
-        return { ...base, top: '10px', left: '10px', right: '10px', height: '120px' };
-      case 'bottom':
-        return { ...base, bottom: '10px', left: '10px', right: '10px', height: '120px' };
-      case 'left':
-        return { ...base, top: '140px', bottom: '140px', left: '10px', width: '200px' };
-      case 'right':
-        return { ...base, top: '140px', bottom: '140px', right: '10px', width: '200px' };
-      case 'center':
-        return { ...base, top: '50%', left: '50%', width: '300px', height: '200px', transform: 'translate(-50%, -50%)' };
-    }
-  };
-
-  return <div style={getZoneStyles()} />;
-};
+}> = ({ zone, isActive }) => (
+  <div className={`magnetic-zone ${zone}${isActive ? ' active' : ''}`} />
+);
 
 export const FloatingPodsLayout: React.FC<FloatingPodsLayoutProps> = ({
   liveGuidanceComponent,
@@ -368,73 +240,16 @@ export const FloatingPodsLayout: React.FC<FloatingPodsLayoutProps> = ({
   };
 
   return (
-    <div style={{
-      position: 'relative',
-      height: 'calc(100vh - 140px)',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-      overflow: 'hidden'
-    }}>
+    <div className="floating-pods-layout">
       {/* Floating Control Panel */}
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        right: '20px',
-        background: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '12px',
-        padding: '12px',
-        display: 'flex',
-        gap: '8px',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-        zIndex: 2000
-      }}>
-        <button
-          onClick={autoArrange}
-          style={{
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '8px 12px',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}
-        >
+      <div className="pods-controls">
+        <button onClick={autoArrange} className="pods-btn primary">
           🎯 Auto Arrange
         </button>
-        <button
-          onClick={minimizeAll}
-          style={{
-            background: '#64748b',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '8px 12px',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
+        <button onClick={minimizeAll} className="pods-btn muted">
           ➖ Minimize All
         </button>
-        <button
-          onClick={expandAll}
-          style={{
-            background: '#10b981',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '8px 12px',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
+        <button onClick={expandAll} className="pods-btn success">
           🔍 Expand All
         </button>
       </div>
@@ -464,14 +279,14 @@ export const FloatingPodsLayout: React.FC<FloatingPodsLayoutProps> = ({
           onLock={handleLock}
           metrics={
             pod.id === 'transcript' ? [
-              { label: 'Words', value: '1,247', color: '#3b82f6' },
-              { label: 'Time', value: '12:34', color: '#10b981' }
+              { label: 'Words', value: '1,247', color: 'var(--accent-blue)' },
+              { label: 'Time', value: '12:34', color: 'var(--accent-green)' }
             ] :
             pod.id === 'sentiment' ? [
-              { label: 'Positive', value: '67%', color: '#10b981' }
+              { label: 'Positive', value: '67%', color: 'var(--accent-green)' }
             ] :
             pod.id === 'guidance' && isRecording ? [
-              { label: 'Active', value: '3', color: '#f59e0b' }
+              { label: 'Active', value: '3', color: 'var(--accent-orange)' }
             ] : undefined
           }
         >
@@ -481,42 +296,11 @@ export const FloatingPodsLayout: React.FC<FloatingPodsLayoutProps> = ({
 
       {/* Recording Status Overlay */}
       {isRecording && (
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'linear-gradient(90deg, #ef4444, #dc2626)',
-          color: 'white',
-          padding: '12px 24px',
-          borderRadius: '50px',
-          fontSize: '14px',
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          boxShadow: '0 10px 30px rgba(239, 68, 68, 0.3)',
-          animation: 'pulse 2s infinite',
-          zIndex: 2000
-        }}>
-          <div style={{
-            width: '12px',
-            height: '12px',
-            borderRadius: '50%',
-            background: 'white',
-            animation: 'pulse 1s infinite'
-          }} />
+        <div className="pods-recording-banner">
+          <div className="pods-recording-dot" />
           🎤 Recording Active - AI Analysis in Progress
         </div>
       )}
-
-      <style>{`
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.8; }
-          100% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };

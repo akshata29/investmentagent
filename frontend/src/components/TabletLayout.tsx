@@ -43,28 +43,28 @@ export const TabletLayout: React.FC<TabletLayoutProps> = ({
       headerText: '📝 Transcript',
       content: transcriptComponent,
       badge: isRecording ? '●' : null,
-      color: '#0066cc'
+  color: 'var(--color-primary)'
     },
     {
       key: 'guidance',
       headerText: '🤖 Live Guidance',
       content: liveGuidanceComponent,
       badge: isRecording ? '●' : null,
-      color: '#10b981'
+  color: 'var(--accent-green)'
     },
     {
       key: 'sentiment',
       headerText: '📊 Sentiment',
       content: sentimentComponent,
       badge: null,
-      color: '#f59e0b'
+  color: 'var(--accent-orange)'
     },
     {
       key: 'recommendation',
       headerText: '💡 Recommendations',
       content: recommendationComponent,
       badge: null,
-      color: '#8b5cf6'
+  color: 'var(--accent-purple)'
     }
   ];
 
@@ -126,7 +126,7 @@ export const TabletLayout: React.FC<TabletLayoutProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  background: '#ff4444',
+                  background: 'var(--accent-red)',
                   color: 'white',
                   padding: '4px 8px',
                   borderRadius: '12px',

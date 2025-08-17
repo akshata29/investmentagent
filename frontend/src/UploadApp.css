@@ -14,7 +14,7 @@ body {
   }  
     
   .App-header  {  
-    background-color: #171717;   
+    background-color: var(--bg-secondary);   
     padding: 1px;  
     color: white;  
     font-size: 24px;
@@ -25,18 +25,18 @@ body {
   .App-header .photo-collection {  
     margin-top: 5px; 
     font-size: 20px; /* Set this to the font size you want */  
-    color: #d2d2d6; /* Set this to the color you want */  
+  color: var(--text-secondary); /* Set this to the color you want */  
   }  
     
   .App-body {  
-    background-color:  #e3e9ed; /* Change to a lighter color */  
+    background-color:  var(--bg-secondary); /* Change to a lighter color */  
     padding: 20px;  
   }  
     
   button {  
-    background-color: #676565;  
+    background-color: var(--color-secondary);  
     border: none;  
-    color: white;  
+  color: var(--text-inverse);  
     padding: 10px 10px;  
     text-align: center;  
     text-decoration: none;  

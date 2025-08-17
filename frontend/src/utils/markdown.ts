@@ -89,12 +89,12 @@ export function exportHtmlToPdf(html: string, title = 'Client Pitch'): void {
   if (!w) return;
   const css = `
     @page { margin: 24mm; }
-    body { font-family: Arial, sans-serif; color: #111; }
-    h1 { color: #0078d4; border-bottom: 2px solid #0078d4; padding-bottom: 8px; }
-    h2, h3 { color: #0078d4; }
+  body { font-family: Arial, sans-serif; color: var(--text-primary); }
+  h1 { color: var(--color-primary); border-bottom: 2px solid var(--color-primary); padding-bottom: 8px; }
+  h2, h3 { color: var(--color-primary); }
     p { line-height: 1.6; }
     ul, ol { margin: 0 0 12px 24px; }
-    hr { border: 0; border-top: 1px solid #ccc; margin: 16px 0; }
+  hr { border: 0; border-top: 1px solid var(--border-primary); margin: 16px 0; }
   `;
   w.document.write(`<!doctype html><html><head><meta charset='utf-8'><title>${title}</title><style>${css}</style></head><body>${html}</body></html>`);
   w.document.close();

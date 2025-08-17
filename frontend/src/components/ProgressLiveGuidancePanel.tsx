@@ -162,15 +162,7 @@ export const ProgressLiveGuidancePanel: React.FC<ProgressLiveGuidancePanelProps>
 
           {/* Middle: View Mode Buttons */}
           {onViewModeChange && (
-            <div style={{ 
-              display: 'flex',
-              gap: 'var(--spacing-xs)',
-              backgroundColor: 'var(--bg-secondary)',
-              padding: 'var(--spacing-xs)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-primary)',
-              boxShadow: 'var(--shadow-sm)'
-            }}>
+            <div className="segmented-control">
               {[
                 { key: 'unified', label: '🎯', title: 'Unified View' },
                 { key: 'progress', label: '📊', title: 'Progress View' },
@@ -181,23 +173,10 @@ export const ProgressLiveGuidancePanel: React.FC<ProgressLiveGuidancePanelProps>
                   key={mode.key}
                   onClick={() => onViewModeChange(mode.key as any)}
                   title={mode.title}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: 'none',
-                    backgroundColor: currentViewMode === mode.key ? 'var(--color-primary)' : 'transparent',
-                    color: currentViewMode === mode.key ? 'var(--text-on-primary)' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
+                  className={`segmented-btn ${currentViewMode === mode.key ? 'active' : ''}`}
                 >
-                  <span style={{ fontSize: '16px' }}>{mode.label}</span>
-                  <span style={{ fontSize: '11px' }}>{mode.title.split(' ')[0]}</span>
+                  <span>{mode.label}</span>
+                  <span>{mode.title.split(' ')[0]}</span>
                 </button>
               ))}
             </div>
@@ -229,16 +208,8 @@ export const ProgressLiveGuidancePanel: React.FC<ProgressLiveGuidancePanelProps>
             {/* Toggle Answers */}
             <button
               onClick={() => setShowAnswers(!showAnswers)}
-              style={{
-                padding: '4px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-primary)',
-                backgroundColor: showAnswers ? 'var(--color-primary)' : 'var(--bg-secondary)',
-                color: showAnswers ? 'var(--text-on-primary)' : 'var(--text-primary)',
-                fontSize: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
+              className={`btn ${showAnswers ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ fontSize: '12px' }}
             >
               {showAnswers ? '🙈 Hide' : '👁️ Show'} Answers
             </button>

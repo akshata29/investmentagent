@@ -62,7 +62,7 @@ export const FloatingPanelsLayout: React.FC<FloatingPanelsLayoutProps> = ({
         title: 'Real-Time Transcript',
         icon: '📝',
         component: transcriptComponent,
-        color: '#0066cc',
+  color: 'var(--color-primary)',
         isLive: isRecording,
         position: { x: 20, y: 20, width: panelWidth, height: panelHeight, zIndex: 1001, minimized: false }
       },
@@ -71,7 +71,7 @@ export const FloatingPanelsLayout: React.FC<FloatingPanelsLayoutProps> = ({
         title: 'Live Guidance',
         icon: '🤖',
         component: liveGuidanceComponent,
-        color: '#10b981',
+  color: 'var(--accent-green)',
         isLive: isRecording,
         position: { x: panelWidth + 30, y: 20, width: panelWidth, height: panelHeight, zIndex: 1002, minimized: false }
       },
@@ -80,7 +80,7 @@ export const FloatingPanelsLayout: React.FC<FloatingPanelsLayoutProps> = ({
         title: 'Sentiment Analysis',
         icon: '📊',
         component: sentimentComponent,
-        color: '#f59e0b',
+  color: 'var(--accent-orange)',
         isLive: false,
         position: { x: 20, y: panelHeight + 30, width: panelWidth, height: panelHeight, zIndex: 1003, minimized: false }
       },
@@ -89,7 +89,7 @@ export const FloatingPanelsLayout: React.FC<FloatingPanelsLayoutProps> = ({
         title: 'Investment Recommendations',
         icon: '💡',
         component: recommendationComponent,
-        color: '#8b5cf6',
+  color: 'var(--accent-purple)',
         isLive: false,
         position: { x: panelWidth + 30, y: panelHeight + 30, width: panelWidth, height: panelHeight, zIndex: 1004, minimized: false }
       }
@@ -202,66 +202,24 @@ export const FloatingPanelsLayout: React.FC<FloatingPanelsLayoutProps> = ({
   const renderPanel = (panel: Panel) => (
     <div
       key={panel.key}
+      className={`floating-panel${dragState.draggedPanel === panel.key ? ' dragging' : ''}`}
       style={{
-        position: 'absolute',
         left: panel.position.x,
         top: panel.position.y,
         width: panel.position.width,
-        height: panel.position.minimized ? '40px' : panel.position.height,
-        zIndex: panel.position.zIndex,
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-lg)',
-        border: '2px solid var(--border-primary)',
-        boxShadow: dragState.draggedPanel === panel.key ? 'var(--shadow-2xl)' : 'var(--shadow-lg)',
-        transition: dragState.draggedPanel === panel.key ? 'none' : 'all 0.3s ease',
-        cursor: dragState.isDragging ? 'grabbing' : 'default',
-        overflow: 'hidden'
+        height: panel.position.minimized ? 40 : panel.position.height,
+        zIndex: panel.position.zIndex
       }}
     >
       {/* Panel Header */}
-      <div
-        style={{
-          padding: 'var(--spacing-sm)',
-          background: panel.color,
-          color: 'white',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'grab',
-          userSelect: 'none'
-        }}
-        onMouseDown={(e) => handleMouseDown(e, panel.key)}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-          <span style={{ fontSize: 'var(--font-size-md)' }}>{panel.icon}</span>
-          <h4 style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>{panel.title}</h4>
-          {panel.isLive && (
-            <span style={{
-              padding: '2px 6px',
-              background: 'rgba(255, 68, 68, 0.9)',
-              borderRadius: '8px',
-              fontSize: '10px',
-              fontWeight: 600,
-              animation: 'pulse 1.5s infinite'
-            }}>
-              LIVE
-            </span>
-          )}
+      <div className="floating-panel-header" style={{ background: panel.color }} onMouseDown={(e) => handleMouseDown(e, panel.key)}>
+        <div className="floating-panel-header-left">
+          <span className="floating-panel-icon">{panel.icon}</span>
+          <h4 className="floating-panel-title">{panel.title}</h4>
+          {panel.isLive && (<span className="live-chip">LIVE</span>)}
         </div>
-        
-        <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
-          <button
-            onClick={() => toggleMinimize(panel.key)}
-            style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              border: 'none',
-              borderRadius: '4px',
-              color: 'white',
-              padding: '4px 8px',
-              cursor: 'pointer',
-              fontSize: '12px'
-            }}
-          >
+        <div className="floating-panel-actions">
+          <button onClick={() => toggleMinimize(panel.key)} className="btn-minimize" title={panel.position.minimized ? 'Restore' : 'Minimize'}>
             {panel.position.minimized ? '⬆' : '⬇'}
           </button>
         </div>
@@ -269,12 +227,7 @@ export const FloatingPanelsLayout: React.FC<FloatingPanelsLayoutProps> = ({
 
       {/* Panel Content */}
       {!panel.position.minimized && (
-        <div style={{
-          height: 'calc(100% - 40px)',
-          overflow: 'auto',
-          padding: 'var(--spacing-sm)',
-          background: 'var(--bg-secondary)'
-        }}>
+        <div className="floating-panel-content">
           {panel.component}
         </div>
       )}
@@ -282,35 +235,17 @@ export const FloatingPanelsLayout: React.FC<FloatingPanelsLayoutProps> = ({
   );
 
   return (
-    <div className="floating-panels-layout" style={{ position: 'relative', height: '100vh' }}>
+    <div className="floating-panels-layout">
       {/* Controls */}
-      <div style={{
-        position: 'fixed',
-        top: '80px',
-        right: '20px',
-        zIndex: 2000,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--spacing-xs)',
-        background: 'var(--bg-card)',
-        padding: 'var(--spacing-sm)',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border-primary)',
-        boxShadow: 'var(--shadow-lg)'
-      }}>
-        <div style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-primary)' }}>
+      <div className="floating-controls">
+        <div className="controls-title">
           Layout Control
         </div>
         
         <select
           value={layoutMode}
           onChange={(e) => setLayoutMode(e.target.value as any)}
-          style={{
-            padding: '4px',
-            borderRadius: '4px',
-            border: '1px solid var(--border-primary)',
-            fontSize: '12px'
-          }}
+          className="controls-select"
         >
           <option value="free">Free Form</option>
           <option value="grid">Grid Layout</option>
@@ -330,91 +265,30 @@ export const FloatingPanelsLayout: React.FC<FloatingPanelsLayoutProps> = ({
       {panels.map(renderPanel)}
 
       {/* Minimized Panels Dock */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        gap: 'var(--spacing-xs)',
-        background: 'var(--bg-card)',
-        padding: 'var(--spacing-sm)',
-        borderRadius: '24px',
-        border: '1px solid var(--border-primary)',
-        boxShadow: 'var(--shadow-lg)',
-        zIndex: 1999
-      }}>
+  <div className="floating-dock">
         {panels.filter(p => p.position.minimized).map(panel => (
           <button
             key={`dock-${panel.key}`}
             onClick={() => toggleMinimize(panel.key)}
-            style={{
-              padding: 'var(--spacing-sm)',
-              background: panel.color,
-              color: 'white',
-              border: 'none',
-              borderRadius: '16px',
-              cursor: 'pointer',
-              fontSize: 'var(--font-size-sm)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              transition: 'all 0.3s ease'
-            }}
+    className="dock-button"
+    style={{ background: panel.color }}
             title={panel.title}
           >
             <span>{panel.icon}</span>
             {panel.isLive && (
-              <span style={{
-                width: '6px',
-                height: '6px',
-                backgroundColor: '#ff4444',
-                borderRadius: '50%',
-                animation: 'pulse 1.5s infinite'
-              }} />
+      <span className="dock-live-dot" />
             )}
           </button>
         ))}
       </div>
 
       {/* Instructions */}
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '20px',
-        background: 'var(--bg-card)',
-        padding: 'var(--spacing-sm)',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border-primary)',
-        fontSize: 'var(--font-size-xs)',
-        color: 'var(--text-secondary)',
-        maxWidth: '200px',
-        zIndex: 1999
-      }}>
+  <div className="floating-tips">
         💡 <strong>Tips:</strong><br />
         • Drag panels by their headers<br />
         • Click minimize (⬇) to dock panels<br />
         • Use layout presets for quick arrangements
       </div>
-
-      <style>{`
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-
-        .floating-panels-layout {
-          user-select: none;
-        }
-
-        @media (max-width: 768px) {
-          .floating-panels-layout .floating-panel {
-            width: calc(100vw - 40px) !important;
-            height: 200px !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };

@@ -121,13 +121,13 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
       case 'positive':
-        return '#28a745';
+  return 'var(--accent-green)';
       case 'negative':
-        return '#dc3545';
+  return 'var(--accent-red)';
       case 'mixed':
-        return '#ffc107';
+  return 'var(--accent-orange)';
       default:
-        return '#6c757d';
+  return 'var(--color-secondary)';
     }
   };
 
@@ -254,9 +254,9 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
           padding: 'var(--spacing-sm)',
           backgroundColor: 'var(--bg-secondary)',
           borderRadius: 'var(--radius-md)',
-          border: `2px solid #28a745`
+          border: `2px solid var(--accent-green)`
         }}>
-          <div style={{ color: '#28a745', fontWeight: 'var(--font-weight-semibold)' }}>
+          <div style={{ color: 'var(--accent-green)', fontWeight: 'var(--font-weight-semibold)' }}>
             Positive
           </div>
           <div style={{ color: 'var(--text-primary)' }}>
@@ -268,9 +268,9 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
           padding: 'var(--spacing-sm)',
           backgroundColor: 'var(--bg-secondary)',
           borderRadius: 'var(--radius-md)',
-          border: `2px solid #6c757d`
+          border: `2px solid var(--color-secondary)`
         }}>
-          <div style={{ color: '#6c757d', fontWeight: 'var(--font-weight-semibold)' }}>
+          <div style={{ color: 'var(--color-secondary)', fontWeight: 'var(--font-weight-semibold)' }}>
             Neutral
           </div>
           <div style={{ color: 'var(--text-primary)' }}>
@@ -282,9 +282,9 @@ export const SentimentGauge: React.FC<SentimentGaugeProps> = ({
           padding: 'var(--spacing-sm)',
           backgroundColor: 'var(--bg-secondary)',
           borderRadius: 'var(--radius-md)',
-          border: `2px solid #dc3545`
+          border: `2px solid var(--accent-red)`
         }}>
-          <div style={{ color: '#dc3545', fontWeight: 'var(--font-weight-semibold)' }}>
+          <div style={{ color: 'var(--accent-red)', fontWeight: 'var(--font-weight-semibold)' }}>
             Negative
           </div>
           <div style={{ color: 'var(--text-primary)' }}>

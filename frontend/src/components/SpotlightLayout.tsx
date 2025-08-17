@@ -77,7 +77,7 @@ const LiveStatusIndicator: React.FC<{ isRecording: boolean; transcriptCount: num
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    background: isRecording ? '#ff4444' : 'var(--bg-secondary)',
+  background: isRecording ? 'var(--accent-red)' : 'var(--bg-secondary)',
     color: isRecording ? 'white' : 'var(--text-primary)',
     padding: '6px 12px',
     borderRadius: '20px',
@@ -91,7 +91,7 @@ const LiveStatusIndicator: React.FC<{ isRecording: boolean; transcriptCount: num
       width: '6px',
       height: '6px',
       borderRadius: '50%',
-      background: isRecording ? 'white' : '#10b981',
+  background: isRecording ? 'white' : 'var(--accent-green)',
       animation: isRecording ? 'pulse 1s infinite' : 'none'
     }} />
     {isRecording ? 'LIVE' : 'READY'}
@@ -129,12 +129,12 @@ export const SpotlightLayout: React.FC<SpotlightLayoutProps> = ({
     transcript: {
       title: '📝 Real-Time Conversation',
       component: transcriptComponent,
-      accent: '#0066cc'
+  accent: 'var(--color-primary)'
     },
     recommendation: {
       title: '💡 Investment Recommendations',
       component: recommendationComponent,
-      accent: '#8b5cf6'
+  accent: 'var(--accent-purple)'
     }
   };
 
@@ -170,7 +170,7 @@ export const SpotlightLayout: React.FC<SpotlightLayoutProps> = ({
             flexDirection: 'column'
           }}>
             <div style={{
-              background: '#10b981',
+              background: 'var(--accent-green)',
               color: 'white',
               padding: '8px 12px',
               fontSize: '11px',
@@ -283,7 +283,7 @@ export const SpotlightLayout: React.FC<SpotlightLayoutProps> = ({
             flexDirection: 'column'
           }}>
             <div style={{
-              background: '#f59e0b',
+              background: 'var(--accent-orange)',
               color: 'white',
               padding: '8px 12px',
               fontSize: '11px',
@@ -316,7 +316,7 @@ export const SpotlightLayout: React.FC<SpotlightLayoutProps> = ({
             icon="📝"
             title="Transcript"
             content="Click to focus on conversation transcript"
-            accent="#0066cc"
+            accent="var(--color-primary)"
             isActive={spotlight === 'transcript'}
             onClick={() => setSpotlight('transcript')}
           />
@@ -324,7 +324,7 @@ export const SpotlightLayout: React.FC<SpotlightLayoutProps> = ({
             icon="💡"
             title="Recommendations"
             content="Click to focus on investment recommendations"
-            accent="#8b5cf6"
+            accent="var(--accent-purple)"
             isActive={spotlight === 'recommendation'}
             onClick={() => setSpotlight('recommendation')}
           />
@@ -332,14 +332,14 @@ export const SpotlightLayout: React.FC<SpotlightLayoutProps> = ({
             icon="🤖"
             title="Guidance"
             content="AI live guidance and task suggestions"
-            accent="#10b981"
+            accent="var(--accent-green)"
             isActive={false}
           />
           <MiniInfoCard
             icon="📊"
             title="Analytics"
             content="Sentiment analysis and conversation metrics"
-            accent="#f59e0b"
+            accent="var(--accent-orange)"
             isActive={false}
           />
         </div>

@@ -39,13 +39,13 @@ export const ModernButton: React.FC<ModernButtonProps> = ({
         };
       case 'danger':
         return {
-          background: 'linear-gradient(135deg, var(--color-danger), #c82333)',
+          background: 'linear-gradient(135deg, var(--color-danger), #dc2626)',
           color: 'var(--text-on-primary)',
           border: 'none'
         };
       case 'success':
         return {
-          background: 'linear-gradient(135deg, var(--color-success), #157347)',
+          background: 'linear-gradient(135deg, var(--color-success), #059669)',
           color: 'var(--text-on-primary)',
           border: 'none'
         };
@@ -130,10 +130,11 @@ interface ModernIconButtonProps {
   icon: React.ReactNode;
   onClick?: () => void;
   title?: string;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   className?: string;
+  children?: React.ReactNode;
 }
 
 export const ModernIconButton: React.FC<ModernIconButtonProps> = ({
@@ -143,7 +144,8 @@ export const ModernIconButton: React.FC<ModernIconButtonProps> = ({
   variant = 'secondary',
   size = 'medium',
   disabled = false,
-  className = ''
+  className = '',
+  children
 }) => {
   const getSizeStyles = () => {
     switch (size) {
@@ -168,6 +170,11 @@ export const ModernIconButton: React.FC<ModernIconButtonProps> = ({
           background: 'var(--color-danger)',
           color: 'var(--text-on-primary)'
         };
+      case 'ghost':
+        // Leave background/border undefined so CSS classes can control them (no inline override)
+        return {
+          color: 'inherit'
+        } as React.CSSProperties;
       default:
         return {
           background: 'var(--bg-secondary)',
@@ -196,10 +203,11 @@ export const ModernIconButton: React.FC<ModernIconButtonProps> = ({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`modern-icon-button ${className}`}
+  className={`modern-icon-button variant-${variant} ${className}`}
       style={baseStyles}
     >
-      {icon}
+  {icon}
+  {children}
     </button>
   );
 };

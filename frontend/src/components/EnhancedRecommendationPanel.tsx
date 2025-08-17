@@ -335,10 +335,10 @@ Return only the JSON object, no other text.`;
             <title>Investment Recommendations</title>
             <style>
               body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-              h1 { color: #0078d4; border-bottom: 2px solid #0078d4; padding-bottom: 10px; }
+              h1 { color: var(--color-primary); border-bottom: 2px solid var(--color-primary); padding-bottom: 10px; }
               .header { margin-bottom: 30px; }
               .content { white-space: pre-wrap; }
-              .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; font-size: 12px; color: #666; }
+              .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-primary); font-size: 12px; color: var(--text-secondary); }
             </style>
           </head>
           <body>

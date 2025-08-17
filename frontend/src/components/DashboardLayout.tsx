@@ -22,33 +22,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [compactMode, setCompactMode] = useState(false);
 
   const renderGridLayout = () => (
-    <div className="dashboard-grid" style={{
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gridTemplateRows: '1fr 1fr',
-      gap: 'var(--spacing-md)',
-      height: `calc(100vh - ${compactMode ? '120px' : '180px'})`,
-      overflow: 'hidden'
-    }}>
+    <div className={`dashboard-grid ${compactMode ? 'compact' : ''}`}>
       {/* Top Left - Live Guidance */}
-      <div className="panel-container live-guidance" style={{
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-lg)',
-        border: '2px solid var(--border-primary)',
-        overflow: 'hidden',
-        position: 'relative',
-        boxShadow: isRecording ? '0 0 20px rgba(0, 102, 204, 0.3)' : 'var(--shadow-md)'
-      }}>
-        <div className="panel-header" style={{
-          padding: 'var(--spacing-sm)',
-          borderBottom: '1px solid var(--border-primary)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'var(--bg-header)',
-          color: 'var(--text-inverse)'
-        }}>
-          <h4 style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>
+      <div className={`panel-container live-guidance ${isRecording ? 'recording' : ''}`}>
+        <div className="panel-header">
+          <h4 className="panel-title">
             🤖 Live Guidance {isRecording && <span className="live-indicator">●</span>}
           </h4>
           <IconButton
@@ -57,97 +35,52 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             styles={{ root: { color: 'var(--text-inverse)' } }}
           />
         </div>
-        <div style={{ height: 'calc(100% - 48px)', overflow: 'auto', padding: 'var(--spacing-sm)' }}>
+        <div className="panel-body">
           {liveGuidanceComponent}
         </div>
       </div>
 
       {/* Top Right - Sentiment */}
-      <div className="panel-container sentiment" style={{
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-lg)',
-        border: '2px solid var(--border-primary)',
-        overflow: 'hidden',
-        position: 'relative',
-        boxShadow: 'var(--shadow-md)'
-      }}>
-        <div className="panel-header" style={{
-          padding: 'var(--spacing-sm)',
-          borderBottom: '1px solid var(--border-primary)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'var(--bg-header)',
-          color: 'var(--text-inverse)'
-        }}>
-          <h4 style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>📊 Sentiment Analysis</h4>
+      <div className="panel-container sentiment">
+        <div className="panel-header">
+          <h4 className="panel-title">📊 Sentiment Analysis</h4>
           <IconButton
             iconProps={{ iconName: 'FullScreen' }}
             onClick={() => setFocusedPanel(focusedPanel === 'sentiment' ? null : 'sentiment')}
             styles={{ root: { color: 'var(--text-inverse)' } }}
           />
         </div>
-        <div style={{ height: 'calc(100% - 48px)', overflow: 'auto', padding: 'var(--spacing-sm)' }}>
+        <div className="panel-body">
           {sentimentComponent}
         </div>
       </div>
 
       {/* Bottom Left - Transcript */}
-      <div className="panel-container transcript" style={{
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-lg)',
-        border: '2px solid var(--border-primary)',
-        overflow: 'hidden',
-        position: 'relative',
-        boxShadow: 'var(--shadow-md)'
-      }}>
-        <div className="panel-header" style={{
-          padding: 'var(--spacing-sm)',
-          borderBottom: '1px solid var(--border-primary)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'var(--bg-header)',
-          color: 'var(--text-inverse)'
-        }}>
-          <h4 style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>📝 Real-Time Transcript</h4>
+      <div className="panel-container transcript">
+        <div className="panel-header">
+          <h4 className="panel-title">📝 Real-Time Transcript</h4>
           <IconButton
             iconProps={{ iconName: 'FullScreen' }}
             onClick={() => setFocusedPanel(focusedPanel === 'transcript' ? null : 'transcript')}
             styles={{ root: { color: 'var(--text-inverse)' } }}
           />
         </div>
-        <div style={{ height: 'calc(100% - 48px)', overflow: 'auto', padding: 'var(--spacing-sm)' }}>
+        <div className="panel-body">
           {transcriptComponent}
         </div>
       </div>
 
       {/* Bottom Right - Recommendations */}
-      <div className="panel-container recommendation" style={{
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-lg)',
-        border: '2px solid var(--border-primary)',
-        overflow: 'hidden',
-        position: 'relative',
-        boxShadow: 'var(--shadow-md)'
-      }}>
-        <div className="panel-header" style={{
-          padding: 'var(--spacing-sm)',
-          borderBottom: '1px solid var(--border-primary)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'var(--bg-header)',
-          color: 'var(--text-inverse)'
-        }}>
-          <h4 style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>💡 Investment Recommendations</h4>
+      <div className="panel-container recommendation">
+        <div className="panel-header">
+          <h4 className="panel-title">💡 Investment Recommendations</h4>
           <IconButton
             iconProps={{ iconName: 'FullScreen' }}
             onClick={() => setFocusedPanel(focusedPanel === 'recommendation' ? null : 'recommendation')}
             styles={{ root: { color: 'var(--text-inverse)' } }}
           />
         </div>
-        <div style={{ height: 'calc(100% - 48px)', overflow: 'auto', padding: 'var(--spacing-sm)' }}>
+        <div className="panel-body">
           {recommendationComponent}
         </div>
       </div>
@@ -155,90 +88,33 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   );
 
   const renderSplitLayout = () => (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '2fr 1fr',
-      gap: 'var(--spacing-md)',
-      height: `calc(100vh - ${compactMode ? '120px' : '180px'})`
-    }}>
-      <div style={{
-        display: 'grid',
-        gridTemplateRows: '1fr 1fr',
-        gap: 'var(--spacing-md)'
-      }}>
-        <div className="panel-container" style={{
-          background: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          border: '2px solid var(--border-primary)',
-          overflow: 'hidden'
-        }}>
-          <div className="panel-header" style={{
-            padding: 'var(--spacing-sm)',
-            background: 'var(--bg-header)',
-            color: 'var(--text-inverse)'
-          }}>
-            <h4 style={{ margin: 0 }}>📝 Real-Time Transcript</h4>
+    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 'var(--spacing-md)', height: `calc(100vh - ${compactMode ? '120px' : '180px'})` }}>
+      <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+        <div className="panel-container">
+          <div className="panel-header">
+            <h4 className="panel-title">📝 Real-Time Transcript</h4>
           </div>
-          <div style={{ height: 'calc(100% - 48px)', overflow: 'auto', padding: 'var(--spacing-sm)' }}>
-            {transcriptComponent}
-          </div>
+          <div className="panel-body">{transcriptComponent}</div>
         </div>
-        <div className="panel-container" style={{
-          background: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          border: '2px solid var(--border-primary)',
-          overflow: 'hidden'
-        }}>
-          <div className="panel-header" style={{
-            padding: 'var(--spacing-sm)',
-            background: 'var(--bg-header)',
-            color: 'var(--text-inverse)'
-          }}>
-            <h4 style={{ margin: 0 }}>💡 Investment Recommendations</h4>
+        <div className="panel-container">
+          <div className="panel-header">
+            <h4 className="panel-title">💡 Investment Recommendations</h4>
           </div>
-          <div style={{ height: 'calc(100% - 48px)', overflow: 'auto', padding: 'var(--spacing-sm)' }}>
-            {recommendationComponent}
-          </div>
+          <div className="panel-body">{recommendationComponent}</div>
         </div>
       </div>
-      <div style={{
-        display: 'grid',
-        gridTemplateRows: '1fr 1fr',
-        gap: 'var(--spacing-md)'
-      }}>
-        <div className="panel-container" style={{
-          background: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          border: '2px solid var(--border-primary)',
-          overflow: 'hidden'
-        }}>
-          <div className="panel-header" style={{
-            padding: 'var(--spacing-sm)',
-            background: 'var(--bg-header)',
-            color: 'var(--text-inverse)'
-          }}>
-            <h4 style={{ margin: 0 }}>🤖 Live Guidance</h4>
+      <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+        <div className="panel-container">
+          <div className="panel-header">
+            <h4 className="panel-title">🤖 Live Guidance</h4>
           </div>
-          <div style={{ height: 'calc(100% - 48px)', overflow: 'auto', padding: 'var(--spacing-sm)' }}>
-            {liveGuidanceComponent}
-          </div>
+          <div className="panel-body">{liveGuidanceComponent}</div>
         </div>
-        <div className="panel-container" style={{
-          background: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          border: '2px solid var(--border-primary)',
-          overflow: 'hidden'
-        }}>
-          <div className="panel-header" style={{
-            padding: 'var(--spacing-sm)',
-            background: 'var(--bg-header)',
-            color: 'var(--text-inverse)'
-          }}>
-            <h4 style={{ margin: 0 }}>📊 Sentiment</h4>
+        <div className="panel-container">
+          <div className="panel-header">
+            <h4 className="panel-title">📊 Sentiment</h4>
           </div>
-          <div style={{ height: 'calc(100% - 48px)', overflow: 'auto', padding: 'var(--spacing-sm)' }}>
-            {sentimentComponent}
-          </div>
+          <div className="panel-body">{sentimentComponent}</div>
         </div>
       </div>
     </div>
@@ -255,36 +131,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     };
 
     return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.8)',
-        zIndex: 1000,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 'var(--spacing-lg)'
-      }} onClick={() => setFocusedPanel(null)}>
-        <div style={{
-          width: '90%',
-          height: '90%',
-          background: 'var(--bg-card)',
-          borderRadius: 'var(--radius-lg)',
-          border: '2px solid var(--border-primary)',
-          overflow: 'hidden'
-        }} onClick={(e) => e.stopPropagation()}>
-          <div className="panel-header" style={{
-            padding: 'var(--spacing-md)',
-            background: 'var(--bg-header)',
-            color: 'var(--text-inverse)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <h3 style={{ margin: 0 }}>
+      <div className="overlay" onClick={() => setFocusedPanel(null)}>
+        <div className="overlay-card" onClick={(e) => e.stopPropagation()}>
+          <div className="overlay-header">
+            <h3 className="overlay-title">
               {focusedPanel === 'guidance' && '🤖 Live Guidance - Full View'}
               {focusedPanel === 'sentiment' && '📊 Sentiment Analysis - Full View'}
               {focusedPanel === 'transcript' && '📝 Real-Time Transcript - Full View'}
@@ -296,7 +146,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               styles={{ root: { color: 'var(--text-inverse)' } }}
             />
           </div>
-          <div style={{ height: 'calc(100% - 60px)', overflow: 'auto', padding: 'var(--spacing-lg)' }}>
+          <div className="overlay-body">
             {components[focusedPanel as keyof typeof components]}
           </div>
         </div>
@@ -307,27 +157,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   return (
     <div className="dashboard-layout">
       {/* Layout Controls */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 'var(--spacing-md)',
-        padding: 'var(--spacing-sm)',
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border-primary)'
-      }}>
-        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
-          <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>Layout:</span>
+      <div className="layout-controls">
+        <div className="left-group">
+          <span className="text-sm fw-600">Layout:</span>
           <select 
             value={layout} 
             onChange={(e) => setLayout(e.target.value as any)}
-            style={{
-              padding: '4px 8px',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border-primary)',
-              background: 'var(--bg-secondary)'
-            }}
+            className="select"
           >
             <option value="grid">📐 Grid (2x2)</option>
             <option value="split">📊 Split (Main + Side)</option>
@@ -348,28 +184,12 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Focused Panel Overlay */}
       {renderFocusedPanel()}
 
-      {/* Live Recording Indicator */}
-      {isRecording && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          background: '#ff4444',
-          color: 'white',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          fontWeight: 600,
-          zIndex: 999,
-          animation: 'pulse 1.5s infinite'
-        }}>
-          ● LIVE RECORDING
-        </div>
-      )}
+    {/* Live Recording Indicator */}
+  {isRecording && (<div className="live-badge">● LIVE RECORDING</div>)}
 
       <style>{`
         .live-indicator {
-          color: #ff4444;
+          color: var(--accent-red);
           animation: pulse 1.5s infinite;
           margin-left: 8px;
         }

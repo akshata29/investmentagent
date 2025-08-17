@@ -14,6 +14,7 @@ import { ScenarioOptions, LayoutOptions } from './AppSettings.tsx';
 import { insuranceConversationTemplate } from './ConversationTemplates';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ThemeToggle } from './components/ThemeToggle';
+import { Brand } from './components/Brand';
 import { ModernSettingsPanel } from './components/ModernSettingsPanel';
 import { UnifiedLiveGuidancePanel } from './components/UnifiedLiveGuidancePanel';
 import { ProgressLiveGuidancePanel } from './components/ProgressLiveGuidancePanel';
@@ -818,55 +819,30 @@ interface AppState {
 
   render() {   
     return (
-        <div className="app-container" style={{ paddingBottom: '80px' }}>
+  <div className="app-container pb-80">
           {/* Modern Header */}
           <div className="modern-card bounce-in">
-            <div className="modern-card-header compact-header" style={{ 
-              padding: 'var(--spacing-md)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
+            <div className="modern-card-header compact-header app-header-bar">
               {/* Left side - Title and status */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                <h3 style={{ 
-                  margin: 0, 
-                  fontSize: 'var(--font-size-lg)',
-                  lineHeight: 1.2
-                }}>
+              <div className="flex items-center gap-sm" style={{ flex: 1 }}>
+                <Brand />
+                <h3 className="app-header-title">
                   {this.state.isRecording && (
-                    <span style={{ 
-                      display: 'inline-block', 
-                      width: '10px', 
-                      height: '10px', 
-                      backgroundColor: '#ff4444', 
-                      borderRadius: '50%', 
-                      marginRight: '6px',
-                      animation: 'pulse 1.5s infinite'
-                    }}></span>
+                    <span className="live-indicator"></span>
                   )}
                   🤖 AI Investment Agent - Conversation Copilot
                 </h3>
                 {this.state.isRecording && (
-                  <span style={{
-                    fontSize: 'var(--font-size-xs)',
-                    color: '#ff4444',
-                    fontWeight: 600,
-                    animation: 'pulse 1.5s infinite'
-                  }}>
+                  <span className="text-xs" style={{ color: 'var(--accent-red)', fontWeight: 600, animation: 'pulse 1.5s infinite' }}>
                     LIVE
                   </span>
                 )}
               </div>
 
               {/* Right side - All controls */}
-              <div style={{ 
-                display: 'flex', 
-                gap: 'var(--spacing-sm)', 
-                alignItems: 'center' 
-              }}>
+              <div className="flex gap-sm items-center">
                 {/* Recording Controls */}
-                <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+                <div className="flex gap-xs">
                   <ModernIconButton
                     icon={
                       <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
@@ -896,15 +872,10 @@ interface AppState {
                 </div>
 
                 {/* Separator */}
-                <div style={{ 
-                  width: '1px', 
-                  height: '24px', 
-                  backgroundColor: 'var(--border-color)', 
-                  opacity: 0.5 
-                }} />
+                <div className="separator-vertical" />
 
                 {/* App Controls */}
-                <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+                <div className="flex gap-xs">
                   <ModernIconButton
                     icon={
                       <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
@@ -939,16 +910,8 @@ interface AppState {
             </div>
 
             {/* Status description - moved below header */}
-            <div style={{ 
-              padding: '0 var(--spacing-md) var(--spacing-sm) var(--spacing-md)',
-              textAlign: 'center'
-            }}>
-              <p style={{ 
-                margin: 0, 
-                fontSize: 'var(--font-size-xs)', 
-                opacity: 0.9,
-                lineHeight: 1.3
-              }}>
+            <div style={{ padding: '0 var(--spacing-md) var(--spacing-sm) var(--spacing-md)', textAlign: 'center' }}>
+              <p className="m-0 text-xs" style={{ opacity: 0.9, lineHeight: 1.3 }}>
                 {this.state.isRecording 
                   ? '🎤 Recording conversation - AI analysis in progress...' 
                   : 'Multimodal AI-powered conversation analysis and real-time guidance'
@@ -1267,7 +1230,7 @@ interface AppState {
           {this.state.showPhotoPanel && (
             <div className="modern-grid modern-grid-3">
               <ModernSection title="Photo Upload" className="col-span-1">
-                <div style={{ marginBottom: 'var(--spacing-md)' }}>
+                <div className="mb-md">
                   <TextField
                     label="Case number:"
                     id="casenumbertextarea"
@@ -1284,11 +1247,7 @@ interface AppState {
                   />
                 </div>
                 
-                <div style={{ 
-                  display: 'flex', 
-                  gap: 'var(--spacing-sm)', 
-                  flexWrap: 'wrap' 
-                }}>
+                <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
                   <ModernButton
                     onClick={() => {
                       const url = `/upload/${this.state.caseNumber}`;
@@ -1310,36 +1269,16 @@ interface AppState {
                 </div>
 
                 {/* Photo Gallery */}
-                <div style={{ marginTop: 'var(--spacing-lg)' }}>
+                <div className="mt-md">
                   <h4>Received Photos</h4>
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', 
-                    gap: 'var(--spacing-sm)' 
-                  }}>
+                  <div className="thumb-grid">
                     {this.state.imageList.map((image, index) => (
                       <img
                         key={index}
                         src={image.sasUrl}
                         alt={image.name}
                         onClick={() => this.onThumbnailClick(image.sasUrl, image.imageInsights)}
-                        style={{
-                          width: '100%',
-                          height: '80px',
-                          objectFit: 'cover',
-                          borderRadius: 'var(--radius-md)',
-                          cursor: 'pointer',
-                          border: '2px solid var(--border-primary)',
-                          transition: 'all 0.3s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'scale(1.05)';
-                          e.currentTarget.style.borderColor = 'var(--color-primary)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'scale(1)';
-                          e.currentTarget.style.borderColor = 'var(--border-primary)';
-                        }}
+                        className="thumb"
                       />
                     ))}
                   </div>

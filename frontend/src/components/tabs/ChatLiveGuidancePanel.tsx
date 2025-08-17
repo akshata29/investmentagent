@@ -173,7 +173,7 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({ li
       case 'advisor':
         return {
           ...baseStyle,
-          backgroundColor: '#0078d4',
+          backgroundColor: 'var(--color-primary)',
           color: 'white',
           alignSelf: 'flex-start' as const,
           marginLeft: '0',
@@ -182,9 +182,9 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({ li
       case 'system':
         return {
           ...baseStyle,
-          backgroundColor: '#f3f2f1',
-          color: '#323130',
-          border: '1px solid #edebe9',
+          backgroundColor: 'var(--bg-tertiary)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border-primary)',
           alignSelf: 'center' as const,
           fontSize: '14px',
           fontStyle: 'italic'
@@ -192,9 +192,9 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({ li
       case 'action':
         return {
           ...baseStyle,
-          backgroundColor: '#fff4ce',
-          color: '#323130',
-          border: '1px solid #ffb900',
+          backgroundColor: 'var(--bg-warning)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--color-warning)',
           alignSelf: 'flex-start' as const,
           marginLeft: '20px',
           marginRight: 'auto'
@@ -209,7 +209,7 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({ li
   return (
     <Stack styles={{ root: { height: '100%', padding: '16px' } }}>
       <Stack horizontal horizontalAlign="space-between" verticalAlign="center" styles={{ root: { marginBottom: '16px' } }}>
-        <Text variant="large" styles={{ root: { fontWeight: '600', color: '#323130' } }}>
+  <Text variant="large" styles={{ root: { fontWeight: '600', color: 'var(--text-primary)' } }}>
           💬 Live Guidance Chat
         </Text>
         {messages.length > 0 && !showAllMessages && currentMessageIndex < messages.length && (
@@ -229,8 +229,8 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({ li
           root: { 
             flex: 1, 
             overflowY: 'auto',
-            backgroundColor: '#faf9f8',
-            border: '1px solid #edebe9',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '1px solid var(--border-primary)',
             borderRadius: '8px',
             padding: '16px',
             display: 'flex',
@@ -254,13 +254,13 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({ li
                 {!showAllMessages && index === currentMessageIndex && isTyping && (
                   <Stack horizontal verticalAlign="center" styles={{ root: { margin: '8px 0' } }}>
                     <div style={{ 
-                      backgroundColor: '#f3f2f1', 
+                      backgroundColor: 'var(--bg-tertiary)', 
                       borderRadius: '18px', 
                       padding: '8px 12px',
                       marginLeft: message.type === 'advisor' ? '0' : '20px'
                     }}>
                       <Spinner size={1} />
-                      <Text styles={{ root: { marginLeft: '8px', fontSize: '12px', color: '#605e5c' } }}>
+                      <Text styles={{ root: { marginLeft: '8px', fontSize: '12px', color: 'var(--text-muted)' } }}>
                         Typing...
                       </Text>
                     </div>

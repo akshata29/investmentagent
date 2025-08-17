@@ -28,7 +28,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
       title: 'Real-Time Transcript',
       icon: '📝',
       component: transcriptComponent,
-      color: '#0066cc',
+  color: 'var(--color-primary)',
       isLive: isRecording
     },
     {
@@ -36,7 +36,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
       title: 'Live Guidance',
       icon: '🤖',
       component: liveGuidanceComponent,
-      color: '#10b981',
+  color: 'var(--accent-green)',
       isLive: isRecording
     },
     {
@@ -44,7 +44,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
       title: 'Sentiment Analysis',
       icon: '📊',
       component: sentimentComponent,
-      color: '#f59e0b',
+  color: 'var(--accent-orange)',
       isLive: false
     },
     {
@@ -52,7 +52,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
       title: 'Investment Recommendations',
       icon: '💡',
       component: recommendationComponent,
-      color: '#8b5cf6',
+  color: 'var(--accent-purple)',
       isLive: false
     }
   ];
@@ -156,7 +156,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
                     <span style={{
                       width: '8px',
                       height: '8px',
-                      backgroundColor: '#ff4444',
+                      backgroundColor: 'var(--accent-red)',
                       borderRadius: '50%',
                       animation: 'pulse 1.5s infinite'
                     }} />
@@ -175,7 +175,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
                   right: '4px',
                   width: '20px',
                   height: '20px',
-                  background: pinnedPanels.includes(panel.key) ? '#ff4444' : 'transparent',
+                  background: pinnedPanels.includes(panel.key) ? 'var(--accent-red)' : 'transparent',
                   border: 'none',
                   borderRadius: '50%',
                   cursor: 'pointer',

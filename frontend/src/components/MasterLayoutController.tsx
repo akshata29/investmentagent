@@ -209,7 +209,7 @@ export const MasterLayoutController: React.FC<MasterLayoutControllerProps> = ({
           {isRecording && (
             <div style={{
               padding: '6px 12px',
-              background: '#ff4444',
+              background: 'var(--accent-red)',
               color: 'white',
               borderRadius: '16px',
               fontSize: 'var(--font-size-xs)',

@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type Theme = 'light' | 'dark';
+export type Theme = 'light' | 'dark' | 'customer';
 
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
+  setTheme: (theme: Theme) => void;
+  cycleTheme: () => void;
   isDark: boolean;
 }
 
@@ -30,7 +32,15 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   });
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
+  const cycleTheme = () => {
+    setTheme(prev => {
+      if (prev === 'light') return 'dark';
+      if (prev === 'dark') return 'customer';
+      return 'light';
+    });
   };
 
   const isDark = theme === 'dark';
@@ -43,11 +53,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     document.documentElement.setAttribute('data-theme', theme);
     
     // Apply theme class to body for global styling
-    document.body.className = theme === 'dark' ? 'theme-dark' : 'theme-light';
+    document.body.className = `theme-${theme}`;
   }, [theme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isDark }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, cycleTheme, isDark }}>
       {children}
     </ThemeContext.Provider>
   );

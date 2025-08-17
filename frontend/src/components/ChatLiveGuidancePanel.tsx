@@ -83,31 +83,9 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({
     const isCompleted = message.status === 'completed';
     
     return (
-      <div
-        key={message.id}
-        className={`chat-message ${isQuestion ? 'question' : 'answer'} ${message.status}`}
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 'var(--spacing-sm)',
-          marginBottom: 'var(--spacing-md)',
-          animation: `chatSlideIn 0.3s ease-out ${index * 0.1}s both`
-        }}
-      >
+  <div key={message.id} className={`chat-message ${isQuestion ? 'question' : 'answer'} ${message.status}`} style={{ animationDelay: `${index * 0.1}s` }}>
         {/* Avatar */}
-        <div
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: isQuestion ? 'var(--color-primary)' : (isCompleted ? 'var(--accent-green)' : 'var(--accent-orange)'),
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            boxShadow: 'var(--shadow-sm)'
-          }}
-        >
+  <div className={`chat-avatar ${isQuestion ? 'question' : `answer ${message.status}`}`}>        
           {isQuestion ? (
             <ChatBubblesQuestion20Regular style={{ color: 'white', fontSize: '16px' }} />
           ) : (
@@ -116,20 +94,7 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({
         </div>
 
         {/* Message Bubble */}
-        <div
-          style={{
-            maxWidth: '70%',
-            backgroundColor: isQuestion ? 'var(--color-primary)' : 'var(--bg-secondary)',
-            color: isQuestion ? 'var(--text-on-primary)' : 'var(--text-primary)',
-            padding: 'var(--spacing-sm) var(--spacing-md)',
-            borderRadius: isQuestion ? '18px 18px 18px 4px' : '18px 18px 4px 18px',
-            border: isQuestion ? 'none' : `1px solid ${isCompleted ? 'var(--accent-green)' : 'var(--accent-orange)'}`,
-            position: 'relative',
-            boxShadow: 'var(--shadow-sm)',
-            textDecoration: isCompleted && isQuestion ? 'line-through' : 'none',
-            opacity: isCompleted && isQuestion ? 0.7 : 1
-          }}
-        >
+  <div className={`chat-bubble ${isQuestion ? 'question' : `answer ${message.status}`}`} style={{ textDecoration: isCompleted && isQuestion ? 'line-through' : 'none', opacity: isCompleted && isQuestion ? 0.7 : 1 }}>
           <Text
             variant="medium"
             style={{
@@ -142,36 +107,14 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({
 
           {/* Timestamp */}
           {showTimestamps && (
-            <Text
-              variant="tiny"
-              style={{
-                color: isQuestion ? 'rgba(255,255,255,0.7)' : 'var(--text-secondary)',
-                fontSize: '10px',
-                marginTop: '4px',
-                display: 'block'
-              }}
-            >
+            <Text variant="tiny" className="chat-timestamp" style={{ color: isQuestion ? 'rgba(255,255,255,0.7)' : undefined }}>
               {formatTime(message.timestamp)}
             </Text>
           )}
 
           {/* Status indicator for questions */}
           {isQuestion && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '-8px',
-                right: '12px',
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                backgroundColor: isCompleted ? 'var(--accent-green)' : 'var(--accent-orange)',
-                border: '2px solid var(--bg-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
+            <div className={`chat-status ${isCompleted ? 'completed' : 'pending'}`}>
               {isCompleted ? (
                 <CheckmarkCircle20Regular style={{ color: 'white', fontSize: '10px' }} />
               ) : (
@@ -191,48 +134,22 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({
   return (
     <div className="modern-section fade-in">
       <div className="modern-section-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="flex justify-between items-center">
           {/* Left side: Title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+          <div className="flex items-center gap-sm">
             <span>💬 Live Guidance Chat</span>
           </div>
 
           {/* Middle: View Mode Buttons */}
           {onViewModeChange && (
-            <div style={{ 
-              display: 'flex',
-              gap: 'var(--spacing-xs)',
-              backgroundColor: 'var(--bg-secondary)',
-              padding: 'var(--spacing-xs)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-primary)',
-              boxShadow: 'var(--shadow-sm)'
-            }}>
+            <div className="segmented-control">
               {[
                 { key: 'unified', label: '🎯', title: 'Unified View' },
                 { key: 'progress', label: '📊', title: 'Progress View' },
                 { key: 'kanban', label: '📋', title: 'Kanban Board' },
                 { key: 'chat', label: '💬', title: 'Chat Style' }
               ].map((mode) => (
-                <button
-                  key={mode.key}
-                  onClick={() => onViewModeChange(mode.key as any)}
-                  title={mode.title}
-                  style={{
-                    padding: '6px 10px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: 'none',
-                    backgroundColor: currentViewMode === mode.key ? 'var(--color-primary)' : 'transparent',
-                    color: currentViewMode === mode.key ? 'var(--text-on-primary)' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
+                <button key={mode.key} onClick={() => onViewModeChange(mode.key as any)} title={mode.title} className={`segmented-btn ${currentViewMode === mode.key ? 'active' : ''}`}>
                   <span style={{ fontSize: '16px' }}>{mode.label}</span>
                   <span style={{ fontSize: '11px' }}>{mode.title.split(' ')[0]}</span>
                 </button>
@@ -241,56 +158,40 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({
           )}
 
           {/* Right side: Stats, Toggle, and Processing */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+          <div className="flex items-center gap-sm">
             {/* Conversation Stats */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-sm)',
-              padding: 'var(--spacing-sm)',
-              backgroundColor: 'var(--bg-secondary)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-primary)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="stats-badge">
+              <div className="flex items-center" style={{ gap: '4px' }}>
                 <CheckmarkCircle20Regular style={{ color: 'var(--accent-green)', fontSize: '14px' }} />
                 <Text variant="small">{completedCount}</Text>
               </div>
-              <Text variant="small" style={{ color: 'var(--text-secondary)' }}>of</Text>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Text variant="small" className="text-secondary">of</Text>
+              <div className="flex items-center" style={{ gap: '4px' }}>
                 <ChatBubblesQuestion20Regular style={{ color: 'var(--color-primary)', fontSize: '14px' }} />
                 <Text variant="small">{totalQuestions}</Text>
               </div>
-              <Text variant="small" style={{ color: 'var(--text-secondary)' }}>
+              <Text variant="small" className="text-secondary">
                 ({totalQuestions > 0 ? Math.round((completedCount / totalQuestions) * 100) : 0}%)
               </Text>
             </div>
 
             <button
               onClick={() => setShowTimestamps(!showTimestamps)}
-              style={{
-                padding: '4px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-primary)',
-                backgroundColor: showTimestamps ? 'var(--color-primary)' : 'var(--bg-secondary)',
-                color: showTimestamps ? 'var(--text-on-primary)' : 'var(--text-primary)',
-                fontSize: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
+              className={`btn ${showTimestamps ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ fontSize: '12px' }}
             >
               🕒 Time
             </button>
 
             {/* Processing Indicator */}
             {isProcessing && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div className="flex items-center" style={{ gap: '4px' }}>
                 <div className="chat-typing-dots">
                   <div className="chat-dot"></div>
                   <div className="chat-dot"></div>
                   <div className="chat-dot"></div>
                 </div>
-                <Text variant="small" style={{ color: 'var(--text-secondary)' }}>
+                <Text variant="small" className="text-secondary">
                   AI is thinking...
                 </Text>
               </div>
@@ -302,18 +203,9 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({
       <div className="modern-section-content">
         <div className="chat-container">
         {chatMessages.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: 'var(--spacing-xl)',
-              color: 'var(--text-secondary)',
-              backgroundColor: 'var(--bg-secondary)',
-              borderRadius: 'var(--radius-lg)',
-              border: '2px dashed var(--border-primary)'
-            }}
-          >
+          <div className="center p-lg chat-empty">
             <ChatBubblesQuestion20Regular style={{ fontSize: '48px', marginBottom: 'var(--spacing-md)' }} />
-            <Text variant="mediumPlus" style={{ fontWeight: 'var(--font-weight-semibold)' }}>
+            <Text variant="mediumPlus" className="font-semibold">
               Live Guidance Chat Ready
             </Text>
             <Text variant="medium" style={{ marginTop: '4px' }}>
@@ -321,17 +213,7 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({
             </Text>
           </div>
         ) : (
-          <div
-            className="chat-messages"
-            style={{
-              maxHeight: '500px',
-              overflowY: 'auto',
-              padding: 'var(--spacing-md)',
-              backgroundColor: 'var(--bg-secondary)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-primary)'
-            }}
-          >
+          <div className="chat-messages">
             {chatMessages.map((message, index) => renderMessage(message, index))}
             
             {/* Scroll to bottom indicator */}
@@ -341,17 +223,8 @@ export const ChatLiveGuidancePanel: React.FC<ChatLiveGuidancePanelProps> = ({
 
         {/* Chat Footer */}
         {chatMessages.length > 0 && (
-          <div
-            style={{
-              marginTop: 'var(--spacing-md)',
-              padding: 'var(--spacing-sm)',
-              backgroundColor: 'var(--bg-tertiary)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-primary)',
-              textAlign: 'center'
-            }}
-          >
-            <Text variant="small" style={{ color: 'var(--text-secondary)' }}>
+          <div className="chat-footer">
+            <Text variant="small" className="text-secondary">
               💡 Live guidance updates automatically as your conversation progresses
             </Text>
           </div>
